@@ -21,13 +21,10 @@ import Container from "reactstrap/lib/Container"
 
 const converter = new Converter({ literalMidWordUnderscores: true })
 
-console.log("converter.makeHtml('v_1 v_2')", converter.makeHtml("v_1 v_2"))
-
 const gs = new Gists(localStorage.getItem("learn_gisthub_token"))
 let saveGist: GistDescriptor
 async function initSaving() {
 	const gists = await gs.all()
-	console.log(gists)
 	let saveGist2 = gists.find(gist => gist.description === "learn saves")
 	if (!saveGist2) {
 		console.log("Creating new gist")
@@ -44,9 +41,6 @@ async function initSaving() {
 	}
 	return JSON.parse(saveGist.files.graphs.content)
 }
-
-// console.log(gists.all())
-const cardTextsRegex = /(?:^|(?<=\n))#.+?(?=\n#|$)/g
 
 const cardTexts = contentMarkdown
 	.split(/^(?=#[^#])/gm)
