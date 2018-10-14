@@ -201,26 +201,22 @@ export class App extends Component<{}, AppState> {
 		</Container>
 	}
 	saverController = new AbortController()
-	saveLevels = _.throttle(
-		(newLevels: { [x: string]: number }): void => {
-			this.saverController.abort()
-			gs.editGist(
-				saveGist.id,
-				{
-					graphs: {
-						content: JSON.stringify(newLevels, undefined, "\t"),
-					},
+	saveLevels = (newLevels: { [x: string]: number }): void => {
+		this.saverController.abort()
+		gs.editGist(
+			saveGist.id,
+			{
+				graphs: {
+					content: JSON.stringify(newLevels, undefined, "\t"),
 				},
-				{ signal: this.saverController.signal },
-			)
-				.then(() => console.log("saved levels"))
-				.catch(err => {
-					throw new Error(err)
-				})
-		},
-		30000,
-		{ leading: false, trailing: true },
-	)
+			},
+			{ signal: this.saverController.signal },
+		)
+			.then(() => console.log("saved levels"))
+			.catch(err => {
+				throw new Error(err)
+			})
+	}
 
 	componentDidUpdate() {
 		MathJax.Hub.Queue(["Typeset", MathJax.Hub, ReactDOM.findDOMNode(this)])
