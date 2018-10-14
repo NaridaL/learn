@@ -19,5 +19,8 @@
 		"ui": "tdd",
 		"compilers": "ts:ts-node/register"
 	},
-	"markdown.extension.orderedList.autoRenumber": false
+	"markdown.extension.orderedList.autoRenumber": false,
+	"editor.rulers": [
+		80
+	  ],
 }

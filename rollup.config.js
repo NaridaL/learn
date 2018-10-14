@@ -6,6 +6,7 @@ import serve from "rollup-plugin-serve"
 import livereload from "rollup-plugin-livereload"
 import replace from "rollup-plugin-replace"
 import string from "rollup-plugin-string"
+import json from "rollup-plugin-json"
 import glsl from "rollup-plugin-glsl"
 import { terser } from "rollup-plugin-terser"
 import { plugin as analyze } from "rollup-plugin-analyzer"
@@ -15,7 +16,7 @@ import * as fs from "fs"
 
 const pkg = JSON.parse(fs.readFileSync("package.json"))
 export default {
-	input: __dirname + "/src/index.ts",
+	input: __dirname + "/src/index.tsx",
 	output: {
 		format: "iife",
 		file: __dirname + (process.env.BUILD == "production" ? "/bundle.min.js" : "/bundle.js"),
@@ -104,6 +105,7 @@ export default {
 			// option if you know what you're doing!
 			// ignore: [ 'conditional-runtime-dependency' ]
 		}),
+		json(),
 		string({
 			include: "./**/*.md"
 		}),
@@ -148,6 +150,7 @@ export default {
 				open: true,
 				host: "localhost",
 				port: 10002,
+				historyApiFallback: true,
 			}),
 		process.env.ROLLUP_WATCH && livereload(),
 		// process.env.BUILD == "production" && analyze(),

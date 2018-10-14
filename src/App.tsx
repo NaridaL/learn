@@ -9,15 +9,21 @@ import React, {
 } from "react"
 import { int, V3, V, M4, DEG } from "ts3dutils"
 import slugify from "slugify"
-import { CardText, Button } from "reactstrap"
+import { CardText, Button, Alert, Input } from "reactstrap"
 import { Converter } from "showdown"
 import _ from "lodash"
+import { Gists } from "./gists"
 
-import contentMarkdown from "../content/graphs.md"
 import ReactDOM from "react-dom"
+import contentMarkdown from "../content/graphs.md"
+import { Link, Switch, Route, Redirect } from "react-router-dom"
 
-const converter = new Converter()
+const converter = new Converter({ literalMidWordUnderscores: true })
 
+console.log("converter.makeHtml('v_1 v_2')", converter.makeHtml("v_1 v_2"))
+
+new Gists(localStorage.getItem("learn_gisthub_token")).all().then(console.log)
+// console.log(gists.all())
 const cardTextsRegex = /(?:^|(?<=\n))#.+?(?=\n#|$)/g
 
 const cardTexts = contentMarkdown
@@ -48,8 +54,10 @@ class AppState {
 	levels: { [slug: string]: int } = {}
 	queue: Card[] = []
 	viewFront = true
+	redirect?: string
+	info?: string
 }
-export class App extends PureComponent<{}, AppState> {
+export class App extends Component<{}, AppState> {
 	public state = new AppState()
 	queueLearn = (level: int, num: int) => {
 		const { levels } = this.state
@@ -60,42 +68,113 @@ export class App extends PureComponent<{}, AppState> {
 	}
 
 	public render() {
-		// return <CardAnswer card={cards[0]} answer={this.answer} />
-		// return (
-		// 	<CardQuestion
-		// 		card={cards[0]}
-		// 		onContinue={() => console.log("Hello there")}
-		// 	/>
-		// )
-		if (0 === this.state.queue.length) {
-			return (
-				<CardOverview
-					cards={cards}
-					levels={this.state.levels}
-					queueLearn={this.queueLearn}
-				/>
-			)
-		} else {
-			const card = this.state.queue[0]
-			if (this.state.viewFront) {
-				return (
-					<CardQuestion
-						card={card}
-						onContinue={() => this.setState({ viewFront: false })}
-					/>
-				)
-			} else {
-				return <CardAnswer card={card} answer={this.answer} />
-			}
+		if (this.state.redirect) {
+			const result = <Redirect push to={this.state.redirect} />
+			this.state.redirect = undefined
+			return result
 		}
+		return (
+			<Switch>
+				<Route
+					path="/card/:cardslug"
+					render={match => [
+						<Link to="/">Zurück zur Übersicht</Link>,
+						<CardCard
+							card={cards.find(
+								c => c.slug == match.match.params.cardslug,
+							)}
+						/>,
+					]}
+				/>
+				<Route
+					exact
+					path="/learn/:level"
+					render={({ match }) => {
+						console.log(
+							cards.filter(
+								c =>
+									(this.state.levels[c.slug] || 1) ===
+									+match.params.level,
+							),
+						)
+						const levelCards = cards.filter(
+							c =>
+								(this.state.levels[c.slug] || 1) ===
+								+match.params.level,
+						)
+						if (0 == levelCards.length) {
+							this.state.info =
+								"No more cards in level " + match.params.level
+							return <Redirect to="/" />
+						}
+						const testCard = _.sample(levelCards)
+						return (
+							<CardQuestion
+								card={testCard}
+								onContinue={() =>
+									this.setState({
+										redirect:
+											"/learn/" +
+											match.params.level +
+											"/answer/" +
+											testCard.slug,
+									})
+								}
+							/>
+						)
+					}}
+				/>
+				<Route
+					exact
+					path="/learn/:level/answer/:cardslug"
+					render={({ match }) => {
+						const card = cards.find(
+							c => c.slug == match.params.cardslug,
+						)
+						return (
+							<CardAnswer
+								card={card}
+								answer={correct => {
+									const newLevel = correct
+										? (this.state.levels[card.slug] || 1) +
+										  1
+										: 1
+									const newLevels = {
+										...this.state.levels,
+										[card.slug]: newLevel,
+									}
+									this.saveLevels(newLevels)
+									this.setState({
+										levels: newLevels,
+										redirect:
+											"/learn/" + match.params.level,
+									})
+								}}
+							/>
+						)
+					}}
+				/>
+				<Route
+					exact
+					path="/"
+					render={match => {
+						const result = (
+							<CardOverview
+								cards={cards}
+								levels={this.state.levels}
+								info={this.state.info}
+							/>
+						)
+						this.state.info = undefined
+						return result
+					}}
+				/>
+				}
+			</Switch>
+		)
 	}
-	answer = (correct: boolean) => {
-		const card = this.state.queue[0]
-		const newLevel = correct ? (this.state.levels[card.slug] || 1) + 1 : 1
-		this.setState({
-			levels: { ...this.state.levels, [card.slug]: newLevel },
-			queue: this.state.queue.slice(1),
-		})
+	saveLevels(newLevels: { [x: string]: number }): void {
+		throw new Error("Method not implemented.")
 	}
 
 	componentDidUpdate() {
@@ -127,27 +206,33 @@ export function CardAnswer({
 	answer: (x: boolean) => void
 }) {
 	return (
-		<div
-			style={{ display: "flex", flexDirection: "column", height: "100%" }}
-		>
-			<CardCard card={card} style={{ flexGrow: 1 }} />
-			<div>
-				<Button
-					style={{ width: "50%" }}
-					color="success"
-					onClick={() => answer(true)}
-				>
-					Richtig
-				</Button>
-				<Button
-					style={{ width: "50%" }}
-					color="warning"
-					onClick={() => answer(false)}
-				>
-					Falsch
-				</Button>
+		<BackToOverview>
+			<div
+				style={{
+					display: "flex",
+					flexDirection: "column",
+					height: "100%",
+				}}
+			>
+				<CardCard card={card} style={{ flexGrow: 1 }} />
+				<div>
+					<Button
+						style={{ width: "50%" }}
+						color="success"
+						onClick={() => answer(true)}
+					>
+						Richtig
+					</Button>
+					<Button
+						style={{ width: "50%" }}
+						color="warning"
+						onClick={() => answer(false)}
+					>
+						Falsch
+					</Button>
+				</div>
 			</div>
-		</div>
+		</BackToOverview>
 	)
 }
 
@@ -159,23 +244,40 @@ export function CardQuestion({
 	onContinue: () => void
 }) {
 	return (
+		<BackToOverview>
+			<div
+				onClick={onContinue}
+				style={{
+					flexGrow: 1,
+					display: "flex",
+					justifyContent: "center",
+				}}
+			>
+				<h1
+					style={{
+						margin: "auto 8px",
+						textAlign: "center",
+					}}
+				>
+					{card.title}
+				</h1>
+			</div>
+		</BackToOverview>
+	)
+}
+
+export function BackToOverview(props) {
+	return (
 		<div
 			style={{
 				display: "flex",
-				alignItems: "center",
 				justifyContent: "center",
 				height: "100%",
+				flexDirection: "column",
 			}}
-			onClick={onContinue}
 		>
-			<h1
-				style={{
-					margin: "auto 8px",
-					textAlign: "center",
-				}}
-			>
-				{card.title}
-			</h1>
+			<Link to="/">Zurück zur Übersicht</Link>
+			{...props.children}
 		</div>
 	)
 }
@@ -183,31 +285,44 @@ export function CardQuestion({
 export function CardOverview({
 	cards,
 	levels,
-	queueLearn,
+	info,
 }: {
 	cards: Card[]
 	levels: { [slug: string]: int }
-	queueLearn: (level, num: int) => void
+	info?: string
 }) {
 	return (
 		<>
-			{[5, 4, 3, 2, 1].flatMap(level => (
+			{info && <Alert color="info">{info}</Alert>}
+			{[1, 2, 3, 4, 5].flatMap(level => (
 				<>
 					<h3 key={"level" + level}>
 						{level}
-						<Button onClick={() => queueLearn(level, 8)}>
-							Learn 8
+						<Button tag={Link} to={"/learn/" + level}>
+							Learn
 						</Button>
 					</h3>
 					<ul>
 						{cards
 							.filter(card => (levels[card.slug] || 1) == level)
 							.map(card => (
-								<li key={card.slug}>{card.title}</li>
+								<li key={card.slug}>
+									<Link to={"/card/" + card.slug}>
+										{card.title}
+									</Link>
+								</li>
 							))}
 					</ul>
 				</>
 			))}
+			{/*  a6f75fadd2cafa535ef37fd6bc9aedabf507b1ee  */}
+			<Input
+				placeholder="github API token w/ gist"
+				onChange={e =>
+					localStorage.setItem("learn_gisthub_token", e.target.value)
+				}
+				defaultValue={localStorage.getItem("learn_gisthub_token") || ""}
+			/>
 		</>
 	)
 }
