@@ -12,17 +12,39 @@ import slugify from "slugify"
 import { CardText, Button, Alert, Input } from "reactstrap"
 import { Converter } from "showdown"
 import _ from "lodash"
-import { Gists } from "./gists"
+import { Gists, GistDescriptor } from "./gists"
 
 import ReactDOM from "react-dom"
 import contentMarkdown from "../content/graphs.md"
 import { Link, Switch, Route, Redirect } from "react-router-dom"
+import Container from "reactstrap/lib/Container"
 
 const converter = new Converter({ literalMidWordUnderscores: true })
 
 console.log("converter.makeHtml('v_1 v_2')", converter.makeHtml("v_1 v_2"))
 
-new Gists(localStorage.getItem("learn_gisthub_token")).all().then(console.log)
+const gs = new Gists(localStorage.getItem("learn_gisthub_token"))
+let saveGist: GistDescriptor
+async function initSaving() {
+	const gists = await gs.all()
+	console.log(gists)
+	let saveGist2 = gists.find(gist => gist.description === "learn saves")
+	if (!saveGist2) {
+		console.log("Creating new gist")
+
+		saveGist = await gs.createGist(
+			{ graphs: { content: "{}" } },
+			"learn saves",
+			false,
+		)
+	} else {
+		console.log("Found existing matching gist " + saveGist2.id)
+
+		saveGist = await gs.getGist(saveGist2.id)
+	}
+	return JSON.parse(saveGist.files.graphs.content)
+}
+
 // console.log(gists.all())
 const cardTextsRegex = /(?:^|(?<=\n))#.+?(?=\n#|$)/g
 
@@ -59,6 +81,19 @@ class AppState {
 }
 export class App extends Component<{}, AppState> {
 	public state = new AppState()
+
+	constructor(props: {}) {
+		super(props)
+		if (localStorage.getItem("learn_gisthub_token")) {
+			initSaving()
+				.then(levels => {
+					console.log("loaded levels from gist")
+					this.setState({ levels })
+				})
+				.catch(console.error)
+		}
+	}
+
 	queueLearn = (level: int, num: int) => {
 		const { levels } = this.state
 		const levelCards = cards.filter(
@@ -73,109 +108,125 @@ export class App extends Component<{}, AppState> {
 			this.state.redirect = undefined
 			return result
 		}
-		return (
-			<Switch>
-				<Route
-					path="/card/:cardslug"
-					render={match => [
-						<Link to="/">Zurück zur Übersicht</Link>,
-						<CardCard
-							card={cards.find(
-								c => c.slug == match.match.params.cardslug,
-							)}
-						/>,
-					]}
-				/>
-				<Route
-					exact
-					path="/learn/:level"
-					render={({ match }) => {
-						console.log(
-							cards.filter(
-								c =>
-									(this.state.levels[c.slug] || 1) ===
-									+match.params.level,
-							),
-						)
-						const levelCards = cards.filter(
+		// prettier-ignore
+		return <Container style={{height: "100%"}}>
+			<Route
+				path="/card/:cardslug"
+				render={match => [
+					<Link to="/">Back to Overview</Link>,
+					<CardCard
+						card={cards.find(
+							c => c.slug == match.match.params.cardslug,
+						)}
+					/>,
+				]}
+			/>
+			<Route
+				exact
+				path="/learn/:level"
+				render={({ match }) => {
+					console.log(
+						cards.filter(
 							c =>
 								(this.state.levels[c.slug] || 1) ===
 								+match.params.level,
-						)
-						if (0 == levelCards.length) {
-							this.state.info =
-								"No more cards in level " + match.params.level
-							return <Redirect to="/" />
-						}
-						const testCard = _.sample(levelCards)
-						return (
-							<CardQuestion
-								card={testCard}
-								onContinue={() =>
-									this.setState({
-										redirect:
-											"/learn/" +
-											match.params.level +
-											"/answer/" +
-											testCard.slug,
-									})
+						),
+					)
+					const levelCards = cards.filter(
+						c =>
+							(this.state.levels[c.slug] || 1) ===
+							+match.params.level,
+					)
+					if (0 == levelCards.length) {
+						this.state.info =
+							"No more cards in level " + match.params.level
+						return <Redirect to="/" />
+					}
+					const testCard = _.sample(levelCards)
+					return (
+						<CardQuestion
+							card={testCard}
+							onContinue={() =>
+								this.setState({
+									redirect:
+										"/learn/" +
+										match.params.level +
+										"/answer/" +
+										testCard.slug,
+								})
+							}
+						/>
+					)
+				}}
+			/>
+			<Route
+				exact
+				path="/learn/:level/answer/:cardslug"
+				render={({ match }) => {
+					const card = cards.find(
+						c => c.slug == match.params.cardslug,
+					)
+					return (
+						<CardAnswer
+							card={card}
+							answer={correct => {
+								const newLevel = correct
+									? (this.state.levels[card.slug] || 1) +
+										1
+									: 1
+								const newLevels = {
+									...this.state.levels,
+									[card.slug]: newLevel,
 								}
-							/>
-						)
-					}}
-				/>
-				<Route
-					exact
-					path="/learn/:level/answer/:cardslug"
-					render={({ match }) => {
-						const card = cards.find(
-							c => c.slug == match.params.cardslug,
-						)
-						return (
-							<CardAnswer
-								card={card}
-								answer={correct => {
-									const newLevel = correct
-										? (this.state.levels[card.slug] || 1) +
-										  1
-										: 1
-									const newLevels = {
-										...this.state.levels,
-										[card.slug]: newLevel,
-									}
-									this.saveLevels(newLevels)
-									this.setState({
-										levels: newLevels,
-										redirect:
-											"/learn/" + match.params.level,
-									})
-								}}
-							/>
-						)
-					}}
-				/>
-				<Route
-					exact
-					path="/"
-					render={match => {
-						const result = (
-							<CardOverview
-								cards={cards}
-								levels={this.state.levels}
-								info={this.state.info}
-							/>
-						)
-						this.state.info = undefined
-						return result
-					}}
-				/>
-				}
-			</Switch>
-		)
+								this.saveLevels(newLevels)
+								this.setState({
+									levels: newLevels,
+									redirect:
+										"/learn/" + match.params.level,
+								})
+							}}
+						/>
+					)
+				}}
+			/>
+			<Route
+				exact
+				path="/"
+				render={match => {
+					const result = (
+						<CardOverview
+							cards={cards}
+							levels={this.state.levels}
+							info={this.state.info}
+						/>
+					)
+					this.state.info = undefined
+					return result
+				}}
+			/>
+		</Container>
 	}
-	saveLevels(newLevels: { [x: string]: number }): void {
-		throw new Error("Method not implemented.")
-	}
+	saverController = new AbortController()
+	saveLevels = _.throttle(
+		(newLevels: { [x: string]: number }): void => {
+			this.saverController.abort()
+			gs.editGist(
+				saveGist.id,
+				{
+					graphs: {
+						content: JSON.stringify(newLevels, undefined, "\t"),
+					},
+				},
+				{ signal: this.saverController.signal },
+			)
+				.then(() => console.log("saved levels"))
+				.catch(err => {
+					throw new Error(err)
+				})
+		},
+		30000,
+		{ leading: false, trailing: true },
+	)
 
 	componentDidUpdate() {
 		MathJax.Hub.Queue(["Typeset", MathJax.Hub, ReactDOM.findDOMNode(this)])
@@ -221,14 +272,14 @@ export function CardAnswer({
 						color="success"
 						onClick={() => answer(true)}
 					>
-						Richtig
+						Correct
 					</Button>
 					<Button
 						style={{ width: "50%" }}
 						color="warning"
 						onClick={() => answer(false)}
 					>
-						Falsch
+						Incorrect
 					</Button>
 				</div>
 			</div>
@@ -295,12 +346,10 @@ export function CardOverview({
 		<>
 			{info && <Alert color="info">{info}</Alert>}
 			{[1, 2, 3, 4, 5].flatMap(level => (
-				<>
-					<h3 key={"level" + level}>
-						{level}
-						<Button tag={Link} to={"/learn/" + level}>
-							Learn
-						</Button>
+				<React.Fragment key={"level" + level}>
+					<h3>
+						Level {level} -{" "}
+						<Link to={"/learn/" + level}>learn</Link>
 					</h3>
 					<ul>
 						{cards
@@ -313,13 +362,16 @@ export function CardOverview({
 								</li>
 							))}
 					</ul>
-				</>
+				</React.Fragment>
 			))}
 			{/*  a6f75fadd2cafa535ef37fd6bc9aedabf507b1ee  */}
 			<Input
 				placeholder="github API token w/ gist"
 				onChange={e =>
-					localStorage.setItem("learn_gisthub_token", e.target.value)
+					localStorage.setItem(
+						"learn_gisthub_token",
+						e.target.value.trim(),
+					)
 				}
 				defaultValue={localStorage.getItem("learn_gisthub_token") || ""}
 			/>

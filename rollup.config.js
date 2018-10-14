@@ -146,11 +146,12 @@ export default {
 			}),
 		process.env.ROLLUP_WATCH &&
 			serve({
-				contentBase: ".",
+				contentBase: "..",
 				open: true,
+				openPage: "/learn/",
 				host: "localhost",
 				port: 10002,
-				historyApiFallback: true,
+				historyApiFallback: "/learn/index.html",
 			}),
 		process.env.ROLLUP_WATCH && livereload(),
 		// process.env.BUILD == "production" && analyze(),

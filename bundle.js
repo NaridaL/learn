@@ -56,7 +56,48 @@
         return t;
     }
 
+    function __awaiter(thisArg, _arguments, P, generator) {
+        return new (P || (P = Promise))(function (resolve, reject) {
+            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+            function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+            step((generator = generator.apply(thisArg, _arguments || [])).next());
+        });
+    }
+
+    function __generator(thisArg, body) {
+        var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+        return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+        function verb(n) { return function (v) { return step([n, v]); }; }
+        function step(op) {
+            if (f) throw new TypeError("Generator is already executing.");
+            while (_) try {
+                if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+                if (y = 0, t) op = [op[0] & 2, t.value];
+                switch (op[0]) {
+                    case 0: case 1: t = op; break;
+                    case 4: _.label++; return { value: op[1], done: false };
+                    case 5: _.label++; y = op[1]; op = [0]; continue;
+                    case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                    default:
+                        if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                        if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                        if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                        if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                        if (t[2]) _.ops.pop();
+                        _.trys.pop(); continue;
+                }
+                op = body.call(thisArg, _);
+            } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+            if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+        }
+    }
+
     var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+    function unwrapExports (x) {
+    	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x.default : x;
+    }
 
     function createCommonjsModule(fn, module) {
     	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -26021,9 +26062,29 @@
         token) {
             this.token = token;
         }
+        Gists.prototype.getGist = function (gist_id) {
+            return fetch("https://api.github.com/gists/" +
+                gist_id +
+                "?" +
+                querystring_4({ access_token: this.token })).then(function (r) { return r.json(); });
+        };
+        Gists.prototype.editGist = function (gist_id, files, fetchOptions) {
+            if (fetchOptions === void 0) { fetchOptions = {}; }
+            return fetch("https://api.github.com/gists/" +
+                gist_id +
+                "?" +
+                querystring_4({ access_token: this.token }), __assign({}, fetchOptions, { method: "PATCH", body: JSON.stringify({ files: files }) })).then(function (r) { return r.json(); });
+        };
         Gists.prototype.all = function (since) {
-            return fetch("https://gist.github.com/gists?" +
+            return fetch("https://api.github.com/gists?" +
                 querystring_4({ access_token: this.token, since: since })).then(function (r) { return r.json(); });
+        };
+        Gists.prototype.createGist = function (files, description, isPublic) {
+            return fetch("https://api.github.com/gists?" +
+                querystring_4({ access_token: this.token }), {
+                method: "POST",
+                body: JSON.stringify({ files: files, description: description, public: isPublic }),
+            }).then(function (r) { return r.json(); });
         };
         return Gists;
     }());
@@ -28743,9 +28804,389 @@
 
     // Written in this round about way for babel-transform-imports
 
+    var utils$1 = createCommonjsModule(function (module, exports) {
+
+    Object.defineProperty(exports, "__esModule", {
+      value: true
+    });
+    exports.focusableElements = exports.defaultToggleEvents = exports.canUseDOM = exports.PopperPlacements = exports.keyCodes = exports.TransitionStatuses = exports.TransitionPropTypeKeys = exports.TransitionTimeouts = exports.targetPropType = undefined;
+
+    var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+    exports.getScrollbarWidth = getScrollbarWidth;
+    exports.setScrollbarWidth = setScrollbarWidth;
+    exports.isBodyOverflowing = isBodyOverflowing;
+    exports.getOriginalBodyPadding = getOriginalBodyPadding;
+    exports.conditionallyUpdateScrollbar = conditionallyUpdateScrollbar;
+    exports.setGlobalCssModule = setGlobalCssModule;
+    exports.mapToCssModules = mapToCssModules;
+    exports.omit = omit;
+    exports.pick = pick;
+    exports.warnOnce = warnOnce;
+    exports.deprecated = deprecated;
+    exports.DOMElement = DOMElement;
+    exports.isReactRefObj = isReactRefObj;
+    exports.findDOMElements = findDOMElements;
+    exports.isArrayOrNodeList = isArrayOrNodeList;
+    exports.getTarget = getTarget;
+    exports.addMultipleEventListeners = addMultipleEventListeners;
+
+
+
+    var _lodash2 = _interopRequireDefault(lodash_isfunction);
+
+
+
+    var _propTypes2 = _interopRequireDefault(propTypes);
+
+    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+    // https://github.com/twbs/bootstrap/blob/v4.0.0-alpha.4/js/src/modal.js#L436-L443
+    function getScrollbarWidth() {
+      var scrollDiv = document.createElement('div');
+      // .modal-scrollbar-measure styles // https://github.com/twbs/bootstrap/blob/v4.0.0-alpha.4/scss/_modal.scss#L106-L113
+      scrollDiv.style.position = 'absolute';
+      scrollDiv.style.top = '-9999px';
+      scrollDiv.style.width = '50px';
+      scrollDiv.style.height = '50px';
+      scrollDiv.style.overflow = 'scroll';
+      document.body.appendChild(scrollDiv);
+      var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
+      document.body.removeChild(scrollDiv);
+      return scrollbarWidth;
+    }
+
+    function setScrollbarWidth(padding) {
+      document.body.style.paddingRight = padding > 0 ? padding + 'px' : null;
+    }
+
+    function isBodyOverflowing() {
+      return document.body.clientWidth < window.innerWidth;
+    }
+
+    function getOriginalBodyPadding() {
+      var style = window.getComputedStyle(document.body, null);
+
+      return parseInt(style && style.getPropertyValue('padding-right') || 0, 10);
+    }
+
+    function conditionallyUpdateScrollbar() {
+      var scrollbarWidth = getScrollbarWidth();
+      // https://github.com/twbs/bootstrap/blob/v4.0.0-alpha.6/js/src/modal.js#L433
+      var fixedContent = document.querySelectorAll('.fixed-top, .fixed-bottom, .is-fixed, .sticky-top')[0];
+      var bodyPadding = fixedContent ? parseInt(fixedContent.style.paddingRight || 0, 10) : 0;
+
+      if (isBodyOverflowing()) {
+        setScrollbarWidth(bodyPadding + scrollbarWidth);
+      }
+    }
+
+    var globalCssModule = void 0;
+
+    function setGlobalCssModule(cssModule) {
+      globalCssModule = cssModule;
+    }
+
+    function mapToCssModules() {
+      var className = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+      var cssModule = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : globalCssModule;
+
+      if (!cssModule) return className;
+      return className.split(' ').map(function (c) {
+        return cssModule[c] || c;
+      }).join(' ');
+    }
+
+    /**
+     * Returns a new object with the key/value pairs from `obj` that are not in the array `omitKeys`.
+     */
+    function omit(obj, omitKeys) {
+      var result = {};
+      Object.keys(obj).forEach(function (key) {
+        if (omitKeys.indexOf(key) === -1) {
+          result[key] = obj[key];
+        }
+      });
+      return result;
+    }
+
+    /**
+     * Returns a filtered copy of an object with only the specified keys.
+     */
+    function pick(obj, keys) {
+      var pickKeys = Array.isArray(keys) ? keys : [keys];
+      var length = pickKeys.length;
+      var key = void 0;
+      var result = {};
+
+      while (length > 0) {
+        length -= 1;
+        key = pickKeys[length];
+        result[key] = obj[key];
+      }
+      return result;
+    }
+
+    var warned = {};
+
+    function warnOnce(message) {
+      if (!warned[message]) {
+        /* istanbul ignore else */
+        if (typeof console !== 'undefined') {
+          console.error(message); // eslint-disable-line no-console
+        }
+        warned[message] = true;
+      }
+    }
+
+    function deprecated(propType, explanation) {
+      return function validate(props, propName, componentName) {
+        if (props[propName] !== null && typeof props[propName] !== 'undefined') {
+          warnOnce('"' + propName + '" property of "' + componentName + '" has been deprecated.\n' + explanation);
+        }
+
+        for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+          rest[_key - 3] = arguments[_key];
+        }
+
+        return propType.apply(undefined, [props, propName, componentName].concat(rest));
+      };
+    }
+
+    function DOMElement(props, propName, componentName) {
+      if (!(props[propName] instanceof Element)) {
+        return new Error('Invalid prop `' + propName + '` supplied to `' + componentName + '`. Expected prop to be an instance of Element. Validation failed.');
+      }
+    }
+
+    var targetPropType = exports.targetPropType = _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.func, DOMElement, _propTypes2.default.shape({ current: _propTypes2.default.any })]);
+
+    /* eslint key-spacing: ["error", { afterColon: true, align: "value" }] */
+    // These are all setup to match what is in the bootstrap _variables.scss
+    // https://github.com/twbs/bootstrap/blob/v4-dev/scss/_variables.scss
+    var TransitionTimeouts = exports.TransitionTimeouts = {
+      Fade: 150, // $transition-fade
+      Collapse: 350, // $transition-collapse
+      Modal: 300, // $modal-transition
+      Carousel: 600 // $carousel-transition
+    };
+
+    // Duplicated Transition.propType keys to ensure that Reactstrap builds
+    // for distribution properly exclude these keys for nested child HTML attributes
+    // since `react-transition-group` removes propTypes in production builds.
+    var TransitionPropTypeKeys = exports.TransitionPropTypeKeys = ['in', 'mountOnEnter', 'unmountOnExit', 'appear', 'enter', 'exit', 'timeout', 'onEnter', 'onEntering', 'onEntered', 'onExit', 'onExiting', 'onExited'];
+
+    var TransitionStatuses = exports.TransitionStatuses = {
+      ENTERING: 'entering',
+      ENTERED: 'entered',
+      EXITING: 'exiting',
+      EXITED: 'exited'
+    };
+
+    var keyCodes = exports.keyCodes = {
+      esc: 27,
+      space: 32,
+      enter: 13,
+      tab: 9,
+      up: 38,
+      down: 40
+    };
+
+    var PopperPlacements = exports.PopperPlacements = ['auto-start', 'auto', 'auto-end', 'top-start', 'top', 'top-end', 'right-start', 'right', 'right-end', 'bottom-end', 'bottom', 'bottom-start', 'left-end', 'left', 'left-start'];
+
+    var canUseDOM = exports.canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
+
+    function isReactRefObj(target) {
+      if (target && (typeof target === 'undefined' ? 'undefined' : _typeof(target)) === 'object') {
+        return 'current' in target;
+      }
+      return false;
+    }
+
+    function findDOMElements(target) {
+      if (isReactRefObj(target)) {
+        return target.current;
+      }
+      if ((0, _lodash2.default)(target)) {
+        return target();
+      }
+      if (typeof target === 'string' && canUseDOM) {
+        var selection = document.querySelectorAll(target);
+        if (!selection.length) {
+          selection = document.querySelectorAll('#' + target);
+        }
+        if (!selection.length) {
+          throw new Error('The target \'' + target + '\' could not be identified in the dom, tip: check spelling');
+        }
+        return selection;
+      }
+      return target;
+    }
+
+    function isArrayOrNodeList(els) {
+      if (els === null) {
+        return false;
+      }
+      return Array.isArray(els) || canUseDOM && typeof els.length === 'number';
+    }
+
+    function getTarget(target) {
+      var els = findDOMElements(target);
+      if (isArrayOrNodeList(els)) {
+        return els[0];
+      }
+      return els;
+    }
+
+    var defaultToggleEvents = exports.defaultToggleEvents = ['touchstart', 'click'];
+
+    function addMultipleEventListeners(_els, handler, _events) {
+      var els = _els;
+      if (!isArrayOrNodeList(els)) {
+        els = [els];
+      }
+
+      var events = _events;
+      if (typeof events === 'string') {
+        events = events.split(/\s+/);
+      }
+
+      if (!isArrayOrNodeList(els) || typeof handler !== 'function' || !Array.isArray(events)) {
+        throw new Error('\n      The first argument of this function must be DOM node or an array on DOM nodes or NodeList.\n      The second must be a function.\n      The third is a string or an array of strings that represents DOM events\n    ');
+      }
+      events.forEach(function (event) {
+        els.forEach(function (el) {
+          el.addEventListener(event, handler);
+        });
+      });
+      return function removeEvents() {
+        events.forEach(function (event) {
+          els.forEach(function (el) {
+            el.removeEventListener(event, handler);
+          });
+        });
+      };
+    }
+
+    var focusableElements = exports.focusableElements = ['a[href]', 'area[href]', 'input:not([disabled]):not([type=hidden])', 'select:not([disabled])', 'textarea:not([disabled])', 'button:not([disabled])', 'object', 'embed', '[tabindex]:not(.modal)', 'audio[controls]', 'video[controls]', '[contenteditable]:not([contenteditable="false"])'];
+    });
+
+    unwrapExports(utils$1);
+    var utils_1 = utils$1.focusableElements;
+    var utils_2 = utils$1.defaultToggleEvents;
+    var utils_3 = utils$1.canUseDOM;
+    var utils_4 = utils$1.PopperPlacements;
+    var utils_5 = utils$1.keyCodes;
+    var utils_6 = utils$1.TransitionStatuses;
+    var utils_7 = utils$1.TransitionPropTypeKeys;
+    var utils_8 = utils$1.TransitionTimeouts;
+    var utils_9 = utils$1.targetPropType;
+    var utils_10 = utils$1.getScrollbarWidth;
+    var utils_11 = utils$1.setScrollbarWidth;
+    var utils_12 = utils$1.isBodyOverflowing;
+    var utils_13 = utils$1.getOriginalBodyPadding;
+    var utils_14 = utils$1.conditionallyUpdateScrollbar;
+    var utils_15 = utils$1.setGlobalCssModule;
+    var utils_16 = utils$1.mapToCssModules;
+    var utils_17 = utils$1.omit;
+    var utils_18 = utils$1.pick;
+    var utils_19 = utils$1.warnOnce;
+    var utils_20 = utils$1.deprecated;
+    var utils_21 = utils$1.DOMElement;
+    var utils_22 = utils$1.isReactRefObj;
+    var utils_23 = utils$1.findDOMElements;
+    var utils_24 = utils$1.isArrayOrNodeList;
+    var utils_25 = utils$1.getTarget;
+    var utils_26 = utils$1.addMultipleEventListeners;
+
+    var Container_1 = createCommonjsModule(function (module, exports) {
+
+    Object.defineProperty(exports, "__esModule", {
+      value: true
+    });
+
+    var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+
+
+    var _react2 = _interopRequireDefault(React__default);
+
+
+
+    var _propTypes2 = _interopRequireDefault(propTypes);
+
+
+
+    var _classnames2 = _interopRequireDefault(classnames);
+
+
+
+    function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+    function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+    var propTypes$$1 = {
+      tag: _propTypes2.default.oneOfType([_propTypes2.default.func, _propTypes2.default.string]),
+      fluid: _propTypes2.default.bool,
+      className: _propTypes2.default.string,
+      cssModule: _propTypes2.default.object
+    };
+
+    var defaultProps = {
+      tag: 'div'
+    };
+
+    var Container = function Container(props) {
+      var className = props.className,
+          cssModule = props.cssModule,
+          fluid = props.fluid,
+          Tag = props.tag,
+          attributes = _objectWithoutProperties(props, ['className', 'cssModule', 'fluid', 'tag']);
+
+      var classes = (0, utils$1.mapToCssModules)((0, _classnames2.default)(className, fluid ? 'container-fluid' : 'container'), cssModule);
+
+      return _react2.default.createElement(Tag, _extends({}, attributes, { className: classes }));
+    };
+
+    Container.propTypes = propTypes$$1;
+    Container.defaultProps = defaultProps;
+
+    exports.default = Container;
+    });
+
+    var Container$1 = unwrapExports(Container_1);
+
     var converter = new showdown.Converter({ literalMidWordUnderscores: true });
     console.log("converter.makeHtml('v_1 v_2')", converter.makeHtml("v_1 v_2"));
-    new Gists(localStorage.getItem("learn_gisthub_token")).all().then(console.log);
+    var gs = new Gists(localStorage.getItem("learn_gisthub_token"));
+    var saveGist;
+    function initSaving() {
+        return __awaiter(this, void 0, void 0, function () {
+            var gists, saveGist2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, gs.all()];
+                    case 1:
+                        gists = _a.sent();
+                        console.log(gists);
+                        saveGist2 = gists.find(function (gist) { return gist.description === "learn saves"; });
+                        if (!!saveGist2) return [3 /*break*/, 3];
+                        console.log("Creating new gist");
+                        return [4 /*yield*/, gs.createGist({ graphs: { content: "{}" } }, "learn saves", false)];
+                    case 2:
+                        saveGist = _a.sent();
+                        return [3 /*break*/, 5];
+                    case 3:
+                        console.log("Found existing matching gist " + saveGist2.id);
+                        return [4 /*yield*/, gs.getGist(saveGist2.id)];
+                    case 4:
+                        saveGist = _a.sent();
+                        _a.label = 5;
+                    case 5: return [2 /*return*/, JSON.parse(saveGist.files.graphs.content)];
+                }
+            });
+        });
+    }
     var cardTexts = contentMarkdown
         .split(/^(?=#[^#])/gm)
         .map(function (x) { return x.trim(); })
@@ -28774,14 +29215,33 @@
     }());
     var App = /** @class */ (function (_super) {
         __extends(App, _super);
-        function App() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
+        function App(props) {
+            var _this = _super.call(this, props) || this;
             _this.state = new AppState();
             _this.queueLearn = function (level, num) {
                 var levels = _this.state.levels;
                 var levelCards = cards.filter(function (card) { return (levels[card.slug] || 1) == level; });
                 _this.setState({ queue: lodash.sampleSize(levelCards, num) });
             };
+            _this.saverController = new AbortController();
+            _this.saveLevels = lodash.throttle(function (newLevels) {
+                _this.saverController.abort();
+                gs.editGist(saveGist.id, {
+                    graphs: {
+                        content: JSON.stringify(newLevels, undefined, "\t"),
+                    },
+                }, { signal: _this.saverController.signal })
+                    .then(function () { return console.log("saved levels"); })["catch"](function (err) {
+                    throw new Error(err);
+                });
+            }, 30000, { leading: false, trailing: true });
+            if (localStorage.getItem("learn_gisthub_token")) {
+                initSaving()
+                    .then(function (levels) {
+                    console.log("loaded levels from gist");
+                    _this.setState({ levels: levels });
+                })["catch"](console.error);
+            }
             return _this;
         }
         App.prototype.render = function () {
@@ -28791,9 +29251,10 @@
                 this.state.redirect = undefined;
                 return result;
             }
-            return (React__default.createElement(Switch, null,
+            // prettier-ignore
+            return React__default.createElement(Container$1, { style: { height: "100%" } },
                 React__default.createElement(Route, { path: "/card/:cardslug", render: function (match) { return [
-                        React__default.createElement(Link, { to: "/" }, "Zur\u00FCck zur \u00DCbersicht"),
+                        React__default.createElement(Link, { to: "/" }, "Back to Overview"),
                         React__default.createElement(CardCard, { card: cards.find(function (c) { return c.slug == match.match.params.cardslug; }) }),
                     ]; } }),
                 React__default.createElement(Route, { exact: true, path: "/learn/:level", render: function (_a) {
@@ -28842,11 +29303,7 @@
                         var result = (React__default.createElement(CardOverview, { cards: cards, levels: _this.state.levels, info: _this.state.info }));
                         _this.state.info = undefined;
                         return result;
-                    } }),
-                "}"));
-        };
-        App.prototype.saveLevels = function (newLevels) {
-            throw new Error("Method not implemented.");
+                    } }));
         };
         App.prototype.componentDidUpdate = function () {
             MathJax.Hub.Queue(["Typeset", MathJax.Hub, ReactDOM.findDOMNode(this)]);
@@ -28871,8 +29328,8 @@
                 } },
                 React__default.createElement(CardCard, { card: card, style: { flexGrow: 1 } }),
                 React__default.createElement("div", null,
-                    React__default.createElement(Button, { style: { width: "50%" }, color: "success", onClick: function () { return answer(true); } }, "Richtig"),
-                    React__default.createElement(Button, { style: { width: "50%" }, color: "warning", onClick: function () { return answer(false); } }, "Falsch")))));
+                    React__default.createElement(Button, { style: { width: "50%" }, color: "success", onClick: function () { return answer(true); } }, "Correct"),
+                    React__default.createElement(Button, { style: { width: "50%" }, color: "warning", onClick: function () { return answer(false); } }, "Incorrect")))));
     }
     function CardQuestion(_a) {
         var card = _a.card, onContinue = _a.onContinue;
@@ -28901,20 +29358,23 @@
         var cards = _a.cards, levels = _a.levels, info = _a.info;
         return (React__default.createElement(React__default.Fragment, null,
             info && React__default.createElement(Alert, { color: "info" }, info),
-            [1, 2, 3, 4, 5].flatMap(function (level) { return (React__default.createElement(React__default.Fragment, null,
-                React__default.createElement("h3", { key: "level" + level },
+            [1, 2, 3, 4, 5].flatMap(function (level) { return (React__default.createElement(React__default.Fragment, { key: "level" + level },
+                React__default.createElement("h3", null,
+                    "Level ",
                     level,
-                    React__default.createElement(Button, { tag: Link, to: "/learn/" + level }, "Learn")),
+                    " -",
+                    " ",
+                    React__default.createElement(Link, { to: "/learn/" + level }, "learn")),
                 React__default.createElement("ul", null, cards
                     .filter(function (card) { return (levels[card.slug] || 1) == level; })
                     .map(function (card) { return (React__default.createElement("li", { key: card.slug },
                     React__default.createElement(Link, { to: "/card/" + card.slug }, card.title))); })))); }),
             React__default.createElement(Input, { placeholder: "github API token w/ gist", onChange: function (e) {
-                    return localStorage.setItem("learn_gisthub_token", e.target.value);
+                    return localStorage.setItem("learn_gisthub_token", e.target.value.trim());
                 }, defaultValue: localStorage.getItem("learn_gisthub_token") || "" })));
     }
 
-    ReactDOM.render(React__default.createElement(BrowserRouter, null,
+    ReactDOM.render(React__default.createElement(BrowserRouter, { basename: "/learn/" },
         React__default.createElement(App, null)), document.getElementById("vcs-root"));
 
 }(React,ReactDOM,showdown));

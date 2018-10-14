@@ -4,6 +4,7 @@
 		"jsx": "react",
 		"allowSyntheticDefaultImports": true,
 		"rootDir": "src",
+		"sourceMap": true,
 		"resolveJsonModule": false
 	},
 	"include": [
