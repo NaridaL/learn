@@ -147,14 +147,24 @@ Let §ccS§ (read calligraphic S) be a set of (multi)sets.
 2. A set §S in ccS§ is **cardinality-maximal** if it has the largest number of
    elements of any set (in §ccS§). (§AA S' in ccS: |S| >= |S'|§)
 
-# Connectedness: Undirected Graph
+# Connectedness
 
-An _undirected graph_ is said to be **connected** if every pair of nodes is
+An **undirected graph** is said to be **connected** if every pair of nodes is
 connected by a path.
 
 It is §k§-connected if every pair of nodes is connected by at least §k§
 **internally node-disjoint paths**. _Connected_ means _1-connected_.
 _2-connected_ is synonmous with _biconnected_.
+
+# Weak Connectedness
+
+A **directed graph** is said to be _weakly connected_ if every pair of nodes is
+connected by a **generalized/weak path**.
+
+# Strong Connectedness
+
+A **directed graph** is said to be _strongly connected_ if every **ordered
+pair** of nodes is connected by a an **ordinary path**.
 
 # Articulation Node
 
@@ -178,7 +188,7 @@ graph **induced** by §V'§.
 
 # Spanning subgraph
 
-A spanning subgraph of an undirected or directed graph G is a subgraph which
+A spanning subgraph of an undirected or directed graph §G§ is a subgraph which
 contains all nodes of §G§.
 
 # Graph: Simple
@@ -187,3 +197,85 @@ A directed or undirected graph is simple, if:
 
 1. No node is paired with itself in §A§/§E§.
 2. The multiset §A§/§E§ is a sete. I.e., no edge is "double".
+
+# Arc: Lexicographically Smaller
+
+Assuming, for each node, an arbitrary but fixed ordering of outgoing arcs, an
+arc §(v,w)§ preceding and arc §(v, w')§ is lexicographically smaller than §(v,
+w')§.
+
+# Path: Lexicographically Smaller
+
+Let §p§ and §p'§ be two paths that start from the same node §v in V§. Let §w§ be
+the last common node such that the subpaths of §p§ and §p'§ are identical. If
+the next arc of §p§ from §w§ onwards is lexicographically smaller than the next
+arc of §p'§, §p§ is **lexicographically smaller** than §p'§.
+
+The lexicograpically smallest path from §v in V§ to §w in V§ is **well defined**
+and **unique**.
+
+# Node: Lexicographically Smaller
+
+**With respect to a starting node §s in V§**, a node §v in V§ is
+lexicographically smaller than §w in V§ if the lexicographically smallest path
+from §s§ to §v§ is lexicographically smaller than the lexicographically smallest
+path from §s§ to §w§.
+
+# Node/Path: Lexicographical Order
+
+A node §v in V§ is lexicographically smaller than a path §p§ if §v§ does not
+belong to §p§ and the lexicographically smallest path from the start of $p$ to
+§v§ precedes §p§.
+
+A node §v in V§ is lexicographically larger than a path §p§ if §v§ does not
+belong to §p§ and the **lexicographically smallest** path from the start of $p$
+to §v§ succeeds §p§.
+
+# Forest
+
+A _forest_ is a **cycle-free undirected graph**.
+
+For a forest §G = (V, E)§ Let §n = |V|§ be the number of nodes, §m = |E|§ the
+number of edges, and §k§ the number of trees in the forest. Then it is §m = n -
+k§.
+
+Proof?
+
+# Tree
+
+A _tree_ is a **connected forest**.
+
+# Branching
+
+A _branching_ is a **cycle-free directed** graph such that the **indegree** of
+each node is zero or one.
+
+# Arborescence
+
+An _arborescence_ is a **branching** such that **exactly one node has indegree
+zero**.
+
+For branchings, this condition is equivalent to weak connectedness.
+
+Also known as a **rooted tree**, the unique node with indegree zero is the
+**root**.
+
+# Head/Tail
+
+Let §G = (V, A)§ be a directed graph.
+
+For an arc §a = (v, w) in A§, §v§ is the _tail_ of §a§, and §w§ is the _head_ of
+§a§.
+
+# Outgoing/Incoming
+
+Let §G = (V, A)§ be a directed graph.
+
+An arc §(v, w) in A§ is an outgoing arc of §v§ and an incoming arc of §w§.
+
+# Outdegree/Indegree
+
+Let §G = (V, A)§ be a directed graph.
+
+The outdegree of a node §v in V§ is the number of **outgoing arcs**, the
+indegree of §v§ is the number of **incoming arcs**.
