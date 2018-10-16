@@ -7,7 +7,7 @@
 	"scripts": {
 		"test": "mocha --ui tdd --require ts-node/register test/**/*.test.ts",
 		"clean:rpt2": "rimraf .rpt2_cache src/.rpt2_cache",
-		"watch": "npm run clean:rpt2 & rollup -w -c rollup.config.js",
+		"start": "npm run clean:rpt2 & rollup -w -c rollup.config.js",
 		"build": "npm run clean:rpt2 & rollup -c rollup.config.js --environment BUILD:production",
 		"pre-commit": "npm run build && git add bundle.*"
 	},
