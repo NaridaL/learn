@@ -3760,7 +3760,6 @@
     Popper.Utils = (typeof window !== 'undefined' ? window : global).PopperUtils;
     Popper.placements = placements;
     Popper.Defaults = Defaults;
-    //# sourceMappingURL=popper.js.map
 
     var _extends$2 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -8855,7 +8854,6 @@
       }]);
       return UncontrolledTooltip;
     }(React.Component);
-    //# sourceMappingURL=reactstrap.es.js.map
 
     /** Detect free variable `global` from Node.js. */
     var freeGlobal$1 = typeof global == 'object' && global && global.Object === Object && global;
@@ -26910,7 +26908,6 @@
         };
         return Gists;
     }());
-    //# sourceMappingURL=gists.js.map
 
     var contentMarkdown = "# Purpose of Dijkstra's Algorithm\r\n\r\nGiven\r\n\r\n1. a directed graph §G = (V, A)§,\r\n2. an arc weight §l(a)§ for each arc §a in A§,\r\n3. a root node §s in V§,\r\n\r\nfind the shortest path from the root node to any other node.\r\n\r\n# Dijkstra's Algorithm: Implementation\r\n\r\nGiven directed graph §(V, A)§.\r\n\r\n## Auxiliary data:\r\n\r\n1. Temporary distance value for each node. §forall v in V: delta(v) in RR§\r\n2. Bounded priority queue §Q§ of size §|V| - 1§, containing graph nodes and\r\n   their distance value as\r\n\r\n## Algorithm:\r\n\r\n1. Set distance of start node §s§ to 0: §delta(s) := 0§.\r\n2. Set distance of all other nodes to §infty§: §forall v in V setminus {s}:\r\n   delta(v) := infty§\r\n3. Insert all nodes into priority queue §Q§.\r\n4. While the queue contains a node with a key/distance value less than infinite:\r\n    5. Extract the minimum node §v§ from the queue.\r\n    6. For each node §w§ which can be reached from §v§, update that node's\r\n       distance if is reduced by taking that path. For each outgoing arc §a =\r\n       (v, w) \\in A§ such that §w \\in Q§, set §delta(w) := min {delta(w),\r\n       delta(v) + l(a)}§\r\n\r\n# Dijkstra's Algorithm: Prerequisite\r\n\r\nThe weight of all edges must be greater or equal to zero. Given directed graph\r\n§(V, A)§, §\\forall a \\in A: l(a) \\ge 0§, where §l(a)§ is the length of edge §a§.\r\n\r\n# Dijkstra's Algorithm: Complexity\r\n\r\n§n = |V|§ (number of nodes)\r\n\r\n§m = |A|§ (number of arcs)\r\n\r\n§T(n)§: Worst case complexity for extraction/insertion of nodes in §Q§.\r\n\r\nWorst case complexity: §O(T(n) \\* (n + m))§\r\n\r\n## Proof\r\n\r\nEach node is extracted and inserted in Q at most once, which gives §O(T(n) \\*\r\nn)§.\r\n\r\nAlso, each arc §(v, w) \\in A§ is touched at most once, when §v§ is extracted\r\nfrom §Q§, which gives §O(T(n) \\* m)§ for all decrease-key operations.\r\n\r\n# Dijkstra's Algorithm: Heuristics\r\n\r\n1. Do not insert nodes with distance §infty§ into the queue.\r\n2. Early termination variant: stop when the target node has been extracted from\r\n   the queue.\r\n3. Bidirectional search: In the single-source, single-target case: Interleave\r\n   two searches: one from §s§ on §G§ and one from §t§ on the inverse of §G§.\r\n   When one node has been extracted by both searches,\r\n4. When performing multiple searches on same large graph:\r\n\r\n    Use heuristics 1. and 2.\r\n\r\n    Instead of initializing the distances on every search, use a version\r\n    counter. If the version counter does not match the current search, assume\r\n    §delta(v) = infty§.\r\n\r\n# Bounded Priority Queue: Methods\r\n\r\n1. insert\r\n2. extract minimum\r\n3. find minimum\r\n4. decrease key\r\n5. number\r\n\r\n# Path: Simple\r\n\r\nA path is simple if it does not meet any node more than once.\r\n\r\n# Path: Ordinary\r\n\r\nAn ordinary path in an undirected graph is a finite ordered sequence §({v_1,\r\nv_2}, {v_2, v_3}, ..., {v\\_(k-2), v\\_(k-2)}, {v\\_(k-2), v\\_(k-2)})§.\r\n\r\nAn ordinary path in a directed graph is a finite ordered sequence §((v_1, v_2),\r\n(v_2, v_3), ..., (v\\_(k-2), v\\_(k-2)), (v\\_(k-2), v\\_(k-2)))§.\r\n\r\n# Path: Generalized\r\n\r\nAlso known as a weak path.\r\n\r\nA generalized path in a directed graph is a finite sequence §((v_1, v_2), (v_2,\r\nv_3), ..., (v\\_(k-2), v\\_(k-2)), (v\\_(k-2), v\\_(k-2)))§, such that turning some\r\n(§>= 0§) of the arcs yields an ordinary path.\r\n\r\n# Graph: Reachability\r\n\r\nA node §t in V§ is _reachable_ from §s in V§ if there is a path from §s§ to §t§\r\nin the graph.\r\n\r\n# Path: Internal Nodes\r\n\r\nThe internal nodes of a path are all the nodes of that path except the start and\r\nend nodes. If the start or end nodes appear more than once on the path, they are\r\nalso internal nodes.\r\n\r\n# Path: Disjointedness\r\n\r\nTwo paths are **edge-disjoint**, if they have no edge in common.\r\n\r\nTwo paths are **arc-disjoint**, if they have no arc in common.\r\n\r\nTwo paths are **(internally) node-disjoint** if they have no node in common that\r\nis internal on either path.\r\n\r\n# Inclusion-Minimal/Maximal\r\n\r\nLet §ccS§ (read calligraphic S) be a set of (multi)sets.\r\n\r\n1. A set §S in ccS§ is **inclusion-minimal** if no other set (in §ccS§) is a\r\n   subset of it. (If §not EE S' in ccS setminus S: S' sub S§)\r\n\r\n2. A set §S in ccS§ is **inclusion-maximal** if no other set (in §ccS§) is a\r\n   proper superset of it / if it is not a proper subset of any other set (in\r\n   §ccS§). (If §not EE S' in ccS setminus S: S' sup S§)\r\n\r\n<!-- Let $\\mathcal{S}$ (read calligraphic S) be a set of (multi)sets.\r\n\r\n1. A set $S\\in\\mathcal{S}$ is **inclusion-minimal** (resp.\r\n   **inclusion-maximal**) in $\\mathcal{S}$ if $S'\\subsetneq S$ (resp.\r\n   $S'\\supsetneq S$) for no $S'\\in\\mathcal{S}\\setminus\\{S\\}$.\r\n2. A set $S\\in\\mathcal{S}$ is **cardinality-minimal** (resp.\r\n   **cardinality-maximal**) in $\\mathcal{S}$ if $|S'|<|S|$ (resp. $|S'|>|S|$)\r\n   for no $S'\\in\\mathcal{S}\\setminus\\{S\\}$. -->\r\n\r\n# Cardinality-Minimal/Maximal\r\n\r\nLet §ccS§ (read calligraphic S) be a set of (multi)sets.\r\n\r\n1. A set §S in ccS§ is **cardinality-minimal** if it has the smallest number of\r\n   elements of any set (in §ccS§). (§AA S' in ccS: |S| <= |S'|§)\r\n2. A set §S in ccS§ is **cardinality-maximal** if it has the largest number of\r\n   elements of any set (in §ccS§). (§AA S' in ccS: |S| >= |S'|§)\r\n\r\n# Connectedness\r\n\r\nAn **undirected graph** is said to be **connected** if every pair of nodes is\r\nconnected by a path.\r\n\r\nIt is §k§-connected if every pair of nodes is connected by at least §k§\r\n**internally node-disjoint paths**. _Connected_ means _1-connected_.\r\n_2-connected_ is synonmous with _biconnected_.\r\n\r\n# Weak Connectedness\r\n\r\nA **directed graph** is said to be _weakly connected_ if every pair of nodes is\r\nconnected by a **generalized/weak path**.\r\n\r\n# Strong Connectedness\r\n\r\nA **directed graph** is said to be _strongly connected_ if every **ordered\r\npair** of nodes is connected by a an **ordinary path**.\r\n\r\n# Articulation Node\r\n\r\nAn arcticulation node in a **connected undirected graph** is a node such that\r\nthe graph would become disconnected if it and its incident arcs were removed.\r\n\r\n# Bridge\r\n\r\nA bridge in a **connected undirected graph** is an edge such that the graph\r\nwould become disconnected if it were removed.\r\n\r\n# Subgraph\r\n\r\nLet §G_1 = (V_1, E_1)§ and §G_2 = (V_2, E_2)§ be two simple undirected graphs.\r\n\r\n§G_1§ is a subgraph of §G_2§ if there is §V' sube V_2§ and bijection §varphi:V_1\r\n-> V'§ such that §{v, w} in E_1§ implies §{varphi(v), varphi(w)} in E_2§.\r\n\r\nIf all the edges of §G_2§ defined on §V'§ are also in §G_1§, we say §G_2§ is the\r\ngraph **induced** by §V'§.\r\n\r\n# Spanning subgraph\r\n\r\nA spanning subgraph of an undirected or directed graph §G§ is a subgraph which\r\ncontains all nodes of §G§.\r\n\r\n# Graph: Simple\r\n\r\nA directed or undirected graph is simple, if:\r\n\r\n1. No node is paired with itself in §A§/§E§.\r\n2. The multiset §A§/§E§ is a sete. I.e., no edge is \"double\".\r\n\r\n# Arc: Lexicographically Smaller\r\n\r\nAssuming, for each node, an arbitrary but fixed ordering of outgoing arcs, an\r\narc §(v,w)§ preceding and arc §(v, w')§ is lexicographically smaller than §(v,\r\nw')§.\r\n\r\n# Path: Lexicographically Smaller\r\n\r\nLet §p§ and §p'§ be two paths that start from the same node §v in V§. Let §w§ be\r\nthe last common node such that the subpaths of §p§ and §p'§ are identical. If\r\nthe next arc of §p§ from §w§ onwards is lexicographically smaller than the next\r\narc of §p'§, §p§ is **lexicographically smaller** than §p'§.\r\n\r\nThe lexicograpically smallest path from §v in V§ to §w in V§ is **well defined**\r\nand **unique**.\r\n\r\n# Node: Lexicographically Smaller\r\n\r\n**With respect to a starting node §s in V§**, a node §v in V§ is\r\nlexicographically smaller than §w in V§ if the lexicographically smallest path\r\nfrom §s§ to §v§ is lexicographically smaller than the lexicographically smallest\r\npath from §s§ to §w§.\r\n\r\n# Node/Path: Lexicographical Order\r\n\r\nA node §v in V§ is lexicographically smaller than a path §p§ if §v§ does not\r\nbelong to §p§ and the lexicographically smallest path from the start of $p$ to\r\n§v§ precedes §p§.\r\n\r\nA node §v in V§ is lexicographically larger than a path §p§ if §v§ does not\r\nbelong to §p§ and the **lexicographically smallest** path from the start of $p$\r\nto §v§ succeeds §p§.\r\n\r\n# Forest\r\n\r\nA _forest_ is a **cycle-free undirected graph**.\r\n\r\nFor a forest §G = (V, E)§ Let §n = |V|§ be the number of nodes, §m = |E|§ the\r\nnumber of edges, and §k§ the number of trees in the forest. Then it is §m = n -\r\nk§.\r\n\r\nProof?\r\n\r\n# Tree\r\n\r\nA _tree_ is a **connected forest**.\r\n\r\n# Branching\r\n\r\nA _branching_ is a **cycle-free directed** graph such that the **indegree** of\r\neach node is zero or one.\r\n\r\n# Arborescence\r\n\r\nAn _arborescence_ is a **branching** such that **exactly one node has indegree\r\nzero**.\r\n\r\nFor branchings, this condition is equivalent to weak connectedness.\r\n\r\nAlso known as a **rooted tree**, the unique node with indegree zero is the\r\n**root**.\r\n\r\n# Head/Tail\r\n\r\nLet §G = (V, A)§ be a directed graph.\r\n\r\nFor an arc §a = (v, w) in A§, §v§ is the _tail_ of §a§, and §w§ is the _head_ of\r\n§a§.\r\n\r\n# Outgoing/Incoming\r\n\r\nLet §G = (V, A)§ be a directed graph.\r\n\r\nAn arc §(v, w) in A§ is an outgoing arc of §v§ and an incoming arc of §w§.\r\n\r\n# Outdegree/Indegree\r\n\r\nLet §G = (V, A)§ be a directed graph.\r\n\r\nThe outdegree of a node §v in V§ is the number of **outgoing arcs**, the\r\nindegree of §v§ is the number of **incoming arcs**.\r\n";
 
@@ -30042,6 +30039,7 @@
         return AppState;
     }());
     function reviveJSONSave(json) {
+        console.log(json);
         var result$$1 = {};
         Object.keys(json).forEach(function (slug) {
             var _a = json[slug], correct = _a.correct, incorrect = _a.incorrect;
@@ -30049,6 +30047,7 @@
                 correct: correct.map(function (x) { return new Date(x); }),
                 incorrect: incorrect.map(function (x) { return new Date(x); }),
             };
+            fixLevel(result$$1[slug]);
         });
         return result$$1;
     }
@@ -30057,15 +30056,19 @@
             x.level = 1 + x.correct.length;
         }
         else {
-            x.level = x.correct
-                .slice(x.correct.length - 4)
-                .filter(function (y) { return y > x.incorrect.last; }).length;
+            x.level =
+                1 +
+                    x.correct
+                        .slice(x.correct.length - 4)
+                        .filter(function (y) { return y > x.incorrect.last; }).length;
         }
     }
     function mergeSaves(a, b) {
         function merge$$1(c, d) {
-            var _a;
-            (_a = c.correct).push.apply(_a, d.correct).sort(function (a, b) { return a - b; });
+            c.correct = lodash.unionBy(c.correct, d.correct, function (x) { return x.getTime(); }).sort(function (a, b) { return a.valueOf() - b.valueOf(); });
+            c.incorrect = lodash.unionBy(c.incorrect, d.incorrect, function (x) {
+                return x.getTime();
+            }).sort(function (a, b) { return a.valueOf() - b.valueOf(); });
             fixLevel(c);
         }
         Object.keys(b).forEach(function (slug) {
@@ -30104,7 +30107,7 @@
                 });
             };
             _this.saveLevels = function (newLevels) {
-                _this.saverController && _this.saverController.abort();
+                // this.saverController && this.saverController.abort()
                 _this.saverController = new AbortController();
                 var saveJSON = JSON.stringify(newLevels, function (key, value) {
                     if (value instanceof Date)
@@ -30136,7 +30139,9 @@
                     console.log("loaded levels from gist");
                     _this.setState(function (_a) {
                         var cardStates = _a.cardStates;
-                        return (mergeSaves(cardStates, levels), { cardStates: cardStates });
+                        mergeSaves(cardStates, reviveJSONSave(levels));
+                        console.log(cardStates);
+                        return { cardStates: cardStates };
                     });
                 })["catch"](console.error);
             }
@@ -30277,7 +30282,6 @@
 
     ReactDOM.render(React__default.createElement(BrowserRouter, { basename: "/learn/" },
         React__default.createElement(App, null)), document.getElementById("vcs-root"));
-    //# sourceMappingURL=index.js.map
 
 }(React,ReactDOM,showdown));
 //# sourceMappingURL=bundle.js.map
