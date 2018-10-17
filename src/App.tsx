@@ -7,6 +7,7 @@ import React, {
 	Props,
 	HTMLAttributes,
 } from "react"
+import querystring from "querystring"
 import { int, V3, V, M4, DEG } from "ts3dutils"
 import slugify from "slugify"
 import { CardText, Button, Alert, Input } from "reactstrap"
@@ -16,8 +17,15 @@ import { Gists, GistDescriptor } from "./gists"
 
 import ReactDOM from "react-dom"
 import contentMarkdown from "../content/graphs.md"
-import { Link, Switch, Route, Redirect } from "react-router-dom"
+import {
+	Link,
+	Switch,
+	Route,
+	Redirect,
+	RouteComponentProps,
+} from "react-router-dom"
 import Container from "reactstrap/lib/Container"
+import FormGroup from "reactstrap/lib/FormGroup"
 
 const converter = new Converter({ literalMidWordUnderscores: true })
 type CardStates = { [slug: string]: CardState }
@@ -54,11 +62,107 @@ async function initSaving(): Promise<{
 	return JSON.parse(saveGist.files.graphs.content)
 }
 
-const cardTexts = contentMarkdown
-	.split(/^(?=#[^#])/gm)
-	.map(x => x.trim())
-	.filter(x => x !== "")
-const cardRegex = /^#(.*)$\s*(?:^slug:(.*)$)?([\s\S]*)/m
+interface GitHubFile {
+	type: "file"
+	encoding: "base64"
+	size: number
+	name: string
+	path: string
+	content: string
+	sha: string
+	url: string // eg "https://api.github.com/repos/octokit/octokit.rb/contents/README.md"
+	git_url: string // eg "https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1"
+	html_url: string // eg "https://github.com/octokit/octokit.rb/blob/master/README.md"
+	download_url: string // eg "https://raw.githubusercontent.com/octokit/octokit.rb/master/README.md"
+	_links: {
+		git: string // eg "https://api.github.com/repos/octokit/octokit.rb/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1"
+		self: string // eg "https://api.github.com/repos/octokit/octokit.rb/contents/README.md"
+		html: string // eg "https://github.com/octokit/octokit.rb/blob/master/README.md"
+	}
+}
+function b64EncodeUnicode(str) {
+	// first we use encodeURIComponent to get percent-encoded UTF-8,
+	// then we convert the percent encodings into raw bytes which
+	// can be fed into btoa.
+	return btoa(
+		encodeURIComponent(str).replace(
+			/%([0-9A-F]{2})/g,
+			function toSolidBytes(match, p1) {
+				return String.fromCharCode(parseInt(p1, 16))
+			},
+		),
+	)
+}
+
+function b64DecodeUnicode(str) {
+	// Going backwards: from bytestream, to percent-encoding, to original string.
+	return decodeURIComponent(
+		atob(str)
+			.split("")
+			.map(function(c) {
+				return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
+			})
+			.join(""),
+	)
+}
+
+const path = "content/graphs.md"
+const contentURL =
+	"https://api.github.com/repos/" +
+	"NaridaL" +
+	"/" +
+	"learn" +
+	"/contents/" +
+	encodeURI(path) +
+	"?" +
+	querystring.stringify({ access_token: gs.token, ref: "master" })
+function updateCard(card: Card, newText: string) {
+	return fetch(contentURL, {
+		cache: "no-store",
+	})
+		.then(r => r.json() as Promise<GitHubFile>)
+		.then(({ sha, content }) => {
+			cards = parseCards(b64DecodeUnicode(content)).map(
+				c =>
+					c.slug == card.slug
+						? {
+								title: card.title,
+								slug: card.slug,
+								content: newText,
+						  }
+						: c,
+			)
+			const newContentContent = cards
+				.map(
+					c =>
+						"# " +
+						c.title.trim() +
+						"\n\n" +
+						c.content.trim() +
+						"\n",
+				)
+				.join("\n")
+			console.log("new content" + newContentContent)
+			return fetch(contentURL + "?", {
+				method: "PUT",
+				body: JSON.stringify({
+					message: "update card " + card.title,
+					content: b64EncodeUnicode(newContentContent),
+					sha,
+				}),
+			})
+		})
+		.then(r => r.json())
+}
+function loadContentFromGitHub() {
+	return fetch(contentURL, {
+		cache: "no-store",
+	})
+		.then(r => r.json() as Promise<GitHubFile>)
+		.then(({ sha, content }) => {
+			cards = parseCards(b64DecodeUnicode(content))
+		})
+}
 
 class Card {
 	constructor(
@@ -68,14 +172,23 @@ class Card {
 	) {}
 }
 
-const cards: Card[] = cardTexts.map(text => {
-	const [, title, slug, content] = text.match(cardRegex)
-	return new Card(
-		title.trim(),
-		slug ? slug.trim() : slugify(title),
-		content.trim(),
-	)
-})
+function parseCards(contentMarkdown: string): Card[] {
+	const cardRegex = /^#(.*)$\s*(?:^slug:(.*)$)?([\s\S]*)/m
+	const cardTexts = contentMarkdown
+		.split(/^(?=#[^#])/gm)
+		.map(x => x.trim())
+		.filter(x => x !== "")
+	return cardTexts.map(text => {
+		const [, title, slug, content] = text.match(cardRegex)
+		return new Card(
+			title.trim(),
+			slug ? slug.trim() : slugify(title),
+			content.trim(),
+		)
+	})
+}
+let cards: Card[] = parseCards(contentMarkdown)
+loadContentFromGitHub()
 
 console.log(cards)
 interface CardState {
@@ -252,6 +365,7 @@ export class App extends Component<{}, AppState> {
 						return result
 					}}
 				/>
+				<Route exact path="/edit/:cardslug" component={EditCard} />
 			</Container>
 		)
 	}
@@ -324,6 +438,7 @@ export function CardCard(
 	return (
 		<div {...htmlAttributes} style={{ ...style, padding: "4px" }}>
 			<h3 style={{ textAlign: "center" }}>{card.title}</h3>
+			<Link to={"/edit/" + card.slug}>Edit</Link>
 			<div
 				dangerouslySetInnerHTML={{
 					__html: converter.makeHtml(card.content),
@@ -341,7 +456,63 @@ export function CardAnswer({
 	answer: (x: boolean) => void
 }) {
 	return (
-		<BackToOverview>
+		<div
+			style={{
+				display: "flex",
+				flexDirection: "column",
+				height: "100%",
+			}}
+		>
+			<BackToOverview />
+			<CardCard card={card} style={{ flexGrow: 1 }} />
+			<div>
+				<Button
+					style={{ width: "50%" }}
+					color="success"
+					onClick={() => answer(true)}
+				>
+					Correct
+				</Button>
+				<Button
+					style={{ width: "50%" }}
+					color="warning"
+					onClick={() => answer(false)}
+				>
+					Incorrect
+				</Button>
+			</div>
+		</div>
+	)
+}
+
+class EditCardState {
+	saving = false
+	constructor(public currentContent: string) {}
+}
+export class EditCard extends Component<
+	RouteComponentProps<{ cardslug: string }>,
+	EditCardState
+> {
+	constructor(props: RouteComponentProps<{ cardslug: string }>) {
+		super(props)
+		this.state = new EditCardState(this.getCard().content)
+	}
+	getCard() {
+		return cards.find(c => c.slug == this.props.match.params.cardslug)
+	}
+	getDerivedStateFromProps(
+		nextProps: RouteComponentProps<{ cardslug: string }>,
+	) {
+		console.log("getDerivedStateFromProps", this.props, nextProps)
+		if (
+			nextProps.match.params.cardslug !== this.props.match.params.cardslug
+		) {
+			console.log("here")
+			return { currentContent: this.getCard().content }
+		}
+	}
+	render() {
+		return (
 			<div
 				style={{
 					display: "flex",
@@ -349,26 +520,42 @@ export function CardAnswer({
 					height: "100%",
 				}}
 			>
-				<CardCard card={card} style={{ flexGrow: 1 }} />
-				<div>
-					<Button
-						style={{ width: "50%" }}
-						color="success"
-						onClick={() => answer(true)}
-					>
-						Correct
-					</Button>
-					<Button
-						style={{ width: "50%" }}
-						color="warning"
-						onClick={() => answer(false)}
-					>
-						Incorrect
-					</Button>
-				</div>
+				<BackToOverview />
+				<h1
+					style={{
+						margin: "auto 8px",
+						textAlign: "center",
+					}}
+				>
+					{this.getCard().title}
+				</h1>
+				<FormGroup style={{ flexGrow: 1 }}>
+					<Input
+						style={{ height: "100%" }}
+						type="textarea"
+						name="text"
+						id="exampleText"
+						value={this.state.currentContent}
+						onChange={e =>
+							this.setState({ currentContent: e.target.value })
+						}
+					/>
+				</FormGroup>
+				<Button onClick={this.save} disabled={this.state.saving}>
+					{this.state.saving
+						? "Saving..."
+						: this.getCard().content != this.state.currentContent
+							? "Save"
+							: "Saved"}
+				</Button>
 			</div>
-		</BackToOverview>
-	)
+		)
+	}
+	save = async () => {
+		this.setState({ saving: true })
+		await updateCard(this.getCard(), this.state.currentContent)
+		this.setState({ saving: false })
+	}
 }
 
 export function CardQuestion({
@@ -379,42 +566,29 @@ export function CardQuestion({
 	onContinue: () => void
 }) {
 	return (
-		<BackToOverview>
-			<div
-				onClick={onContinue}
+		<div
+			onClick={onContinue}
+			style={{
+				flexGrow: 1,
+				display: "flex",
+				justifyContent: "center",
+			}}
+		>
+			<BackToOverview />
+			<h1
 				style={{
-					flexGrow: 1,
-					display: "flex",
-					justifyContent: "center",
+					margin: "auto 8px",
+					textAlign: "center",
 				}}
 			>
-				<h1
-					style={{
-						margin: "auto 8px",
-						textAlign: "center",
-					}}
-				>
-					{card.title}
-				</h1>
-			</div>
-		</BackToOverview>
+				{card.title}
+			</h1>
+		</div>
 	)
 }
 
 export function BackToOverview(props) {
-	return (
-		<div
-			style={{
-				display: "flex",
-				justifyContent: "center",
-				height: "100%",
-				flexDirection: "column",
-			}}
-		>
-			<Link to="/">Zurück zur Übersicht</Link>
-			{...props.children}
-		</div>
-	)
+	return <Link to="/">Zurück zur Übersicht</Link>
 }
 
 export function CardOverview({

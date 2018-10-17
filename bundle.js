@@ -103,6 +103,120 @@
     	return module = { exports: {} }, fn(module, module.exports), module.exports;
     }
 
+    // Copyright Joyent, Inc. and other Node contributors.
+
+    // If obj.hasOwnProperty has been overridden, then calling
+    // obj.hasOwnProperty(prop) will break.
+    // See: https://github.com/joyent/node/issues/1707
+    function hasOwnProperty(obj, prop) {
+      return Object.prototype.hasOwnProperty.call(obj, prop);
+    }
+
+    var decode = function(qs, sep, eq, options) {
+      sep = sep || '&';
+      eq = eq || '=';
+      var obj = {};
+
+      if (typeof qs !== 'string' || qs.length === 0) {
+        return obj;
+      }
+
+      var regexp = /\+/g;
+      qs = qs.split(sep);
+
+      var maxKeys = 1000;
+      if (options && typeof options.maxKeys === 'number') {
+        maxKeys = options.maxKeys;
+      }
+
+      var len = qs.length;
+      // maxKeys <= 0 means that we should not limit keys count
+      if (maxKeys > 0 && len > maxKeys) {
+        len = maxKeys;
+      }
+
+      for (var i = 0; i < len; ++i) {
+        var x = qs[i].replace(regexp, '%20'),
+            idx = x.indexOf(eq),
+            kstr, vstr, k, v;
+
+        if (idx >= 0) {
+          kstr = x.substr(0, idx);
+          vstr = x.substr(idx + 1);
+        } else {
+          kstr = x;
+          vstr = '';
+        }
+
+        k = decodeURIComponent(kstr);
+        v = decodeURIComponent(vstr);
+
+        if (!hasOwnProperty(obj, k)) {
+          obj[k] = v;
+        } else if (Array.isArray(obj[k])) {
+          obj[k].push(v);
+        } else {
+          obj[k] = [obj[k], v];
+        }
+      }
+
+      return obj;
+    };
+
+    // Copyright Joyent, Inc. and other Node contributors.
+
+    var stringifyPrimitive = function(v) {
+      switch (typeof v) {
+        case 'string':
+          return v;
+
+        case 'boolean':
+          return v ? 'true' : 'false';
+
+        case 'number':
+          return isFinite(v) ? v : '';
+
+        default:
+          return '';
+      }
+    };
+
+    var encode = function(obj, sep, eq, name) {
+      sep = sep || '&';
+      eq = eq || '=';
+      if (obj === null) {
+        obj = undefined;
+      }
+
+      if (typeof obj === 'object') {
+        return Object.keys(obj).map(function(k) {
+          var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
+          if (Array.isArray(obj[k])) {
+            return obj[k].map(function(v) {
+              return ks + encodeURIComponent(stringifyPrimitive(v));
+            }).join(sep);
+          } else {
+            return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
+          }
+        }).join(sep);
+
+      }
+
+      if (!name) return '';
+      return encodeURIComponent(stringifyPrimitive(name)) + eq +
+             encodeURIComponent(stringifyPrimitive(obj));
+    };
+
+    var querystring = createCommonjsModule(function (module, exports) {
+
+    exports.decode = exports.parse = decode;
+    exports.encode = exports.stringify = encode;
+    });
+    var querystring_1 = querystring.decode;
+    var querystring_2 = querystring.parse;
+    var querystring_3 = querystring.encode;
+    var querystring_4 = querystring.stringify;
+
     var slugify = createCommonjsModule(function (module, exports) {
     (function (name, root, factory) {
       {
@@ -156,7 +270,7 @@
     */
     /* eslint-disable no-unused-vars */
     var getOwnPropertySymbols = Object.getOwnPropertySymbols;
-    var hasOwnProperty = Object.prototype.hasOwnProperty;
+    var hasOwnProperty$1 = Object.prototype.hasOwnProperty;
     var propIsEnumerable = Object.prototype.propertyIsEnumerable;
 
     function toObject(val) {
@@ -220,7 +334,7 @@
     		from = Object(arguments[s]);
 
     		for (var key in from) {
-    			if (hasOwnProperty.call(from, key)) {
+    			if (hasOwnProperty$1.call(from, key)) {
     				to[key] = from[key];
     			}
     		}
@@ -980,7 +1094,7 @@
     var objectProto = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$1 = objectProto.hasOwnProperty;
+    var hasOwnProperty$2 = objectProto.hasOwnProperty;
 
     /**
      * Used to resolve the
@@ -1017,7 +1131,7 @@
      * @returns {string} Returns the raw `toStringTag`.
      */
     function getRawTag(value) {
-      var isOwn = hasOwnProperty$1.call(value, symToStringTag),
+      var isOwn = hasOwnProperty$2.call(value, symToStringTag),
           tag = value[symToStringTag];
 
       try {
@@ -3760,6 +3874,7 @@
     Popper.Utils = (typeof window !== 'undefined' ? window : global).PopperUtils;
     Popper.placements = placements;
     Popper.Defaults = Defaults;
+    //# sourceMappingURL=popper.js.map
 
     var _extends$2 = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -8854,6 +8969,7 @@
       }]);
       return UncontrolledTooltip;
     }(React.Component);
+    //# sourceMappingURL=reactstrap.es.js.map
 
     /** Detect free variable `global` from Node.js. */
     var freeGlobal$1 = typeof global == 'object' && global && global.Object === Object && global;
@@ -8871,7 +8987,7 @@
     var objectProto$2 = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$2 = objectProto$2.hasOwnProperty;
+    var hasOwnProperty$3 = objectProto$2.hasOwnProperty;
 
     /**
      * Used to resolve the
@@ -8891,7 +9007,7 @@
      * @returns {string} Returns the raw `toStringTag`.
      */
     function getRawTag$1(value) {
-      var isOwn = hasOwnProperty$2.call(value, symToStringTag$1),
+      var isOwn = hasOwnProperty$3.call(value, symToStringTag$1),
           tag = value[symToStringTag$1];
 
       try {
@@ -9474,11 +9590,11 @@
     var funcToString$1 = funcProto$1.toString;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$3 = objectProto$4.hasOwnProperty;
+    var hasOwnProperty$4 = objectProto$4.hasOwnProperty;
 
     /** Used to detect if a method is native. */
     var reIsNative = RegExp('^' +
-      funcToString$1.call(hasOwnProperty$3).replace(reRegExpChar, '\\$&')
+      funcToString$1.call(hasOwnProperty$4).replace(reRegExpChar, '\\$&')
       .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
     );
 
@@ -9811,7 +9927,7 @@
     var objectProto$5 = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$4 = objectProto$5.hasOwnProperty;
+    var hasOwnProperty$5 = objectProto$5.hasOwnProperty;
 
     /**
      * Gets the name of `func`.
@@ -9823,7 +9939,7 @@
     function getFuncName(func) {
       var result = (func.name + ''),
           array = realNames[result],
-          length = hasOwnProperty$4.call(realNames, result) ? array.length : 0;
+          length = hasOwnProperty$5.call(realNames, result) ? array.length : 0;
 
       while (length--) {
         var data = array[length],
@@ -9894,7 +10010,7 @@
     var objectProto$6 = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$5 = objectProto$6.hasOwnProperty;
+    var hasOwnProperty$6 = objectProto$6.hasOwnProperty;
 
     /**
      * Creates a `lodash` object which wraps `value` to enable implicit method
@@ -10018,7 +10134,7 @@
         if (value instanceof LodashWrapper) {
           return value;
         }
-        if (hasOwnProperty$5.call(value, '__wrapped__')) {
+        if (hasOwnProperty$6.call(value, '__wrapped__')) {
           return wrapperClone(value);
         }
       }
@@ -10927,7 +11043,7 @@
     var objectProto$7 = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$6 = objectProto$7.hasOwnProperty;
+    var hasOwnProperty$7 = objectProto$7.hasOwnProperty;
 
     /**
      * Assigns `value` to `key` of `object` if the existing value is not equivalent
@@ -10941,7 +11057,7 @@
      */
     function assignValue(object, key, value) {
       var objValue = object[key];
-      if (!(hasOwnProperty$6.call(object, key) && eq(objValue, value)) ||
+      if (!(hasOwnProperty$7.call(object, key) && eq(objValue, value)) ||
           (value === undefined && !(key in object))) {
         baseAssignValue(object, key, value);
       }
@@ -11202,7 +11318,7 @@
     var objectProto$9 = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$7 = objectProto$9.hasOwnProperty;
+    var hasOwnProperty$8 = objectProto$9.hasOwnProperty;
 
     /** Built-in value references. */
     var propertyIsEnumerable = objectProto$9.propertyIsEnumerable;
@@ -11226,7 +11342,7 @@
      * // => false
      */
     var isArguments = baseIsArguments(function() { return arguments; }()) ? baseIsArguments : function(value) {
-      return isObjectLike$1(value) && hasOwnProperty$7.call(value, 'callee') &&
+      return isObjectLike$1(value) && hasOwnProperty$8.call(value, 'callee') &&
         !propertyIsEnumerable.call(value, 'callee');
     };
 
@@ -11402,7 +11518,7 @@
     var objectProto$a = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$8 = objectProto$a.hasOwnProperty;
+    var hasOwnProperty$9 = objectProto$a.hasOwnProperty;
 
     /**
      * Creates an array of the enumerable property names of the array-like `value`.
@@ -11422,7 +11538,7 @@
           length = result.length;
 
       for (var key in value) {
-        if ((inherited || hasOwnProperty$8.call(value, key)) &&
+        if ((inherited || hasOwnProperty$9.call(value, key)) &&
             !(skipIndexes && (
                // Safari 9 has enumerable `arguments.length` in strict mode.
                key == 'length' ||
@@ -11460,7 +11576,7 @@
     var objectProto$b = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$9 = objectProto$b.hasOwnProperty;
+    var hasOwnProperty$a = objectProto$b.hasOwnProperty;
 
     /**
      * The base implementation of `_.keys` which doesn't treat sparse arrays as dense.
@@ -11475,7 +11591,7 @@
       }
       var result = [];
       for (var key in Object(object)) {
-        if (hasOwnProperty$9.call(object, key) && key != 'constructor') {
+        if (hasOwnProperty$a.call(object, key) && key != 'constructor') {
           result.push(key);
         }
       }
@@ -11518,7 +11634,7 @@
     var objectProto$c = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$a = objectProto$c.hasOwnProperty;
+    var hasOwnProperty$b = objectProto$c.hasOwnProperty;
 
     /**
      * Assigns own enumerable string keyed properties of source objects to the
@@ -11558,7 +11674,7 @@
         return;
       }
       for (var key in source) {
-        if (hasOwnProperty$a.call(source, key)) {
+        if (hasOwnProperty$b.call(source, key)) {
           assignValue(object, key, source[key]);
         }
       }
@@ -11587,7 +11703,7 @@
     var objectProto$d = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$b = objectProto$d.hasOwnProperty;
+    var hasOwnProperty$c = objectProto$d.hasOwnProperty;
 
     /**
      * The base implementation of `_.keysIn` which doesn't treat sparse arrays as dense.
@@ -11604,7 +11720,7 @@
           result = [];
 
       for (var key in object) {
-        if (!(key == 'constructor' && (isProto || !hasOwnProperty$b.call(object, key)))) {
+        if (!(key == 'constructor' && (isProto || !hasOwnProperty$c.call(object, key)))) {
           result.push(key);
         }
       }
@@ -11801,7 +11917,7 @@
     var objectProto$e = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$c = objectProto$e.hasOwnProperty;
+    var hasOwnProperty$d = objectProto$e.hasOwnProperty;
 
     /**
      * Gets the hash value for `key`.
@@ -11818,14 +11934,14 @@
         var result = data[key];
         return result === HASH_UNDEFINED ? undefined : result;
       }
-      return hasOwnProperty$c.call(data, key) ? data[key] : undefined;
+      return hasOwnProperty$d.call(data, key) ? data[key] : undefined;
     }
 
     /** Used for built-in method references. */
     var objectProto$f = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$d = objectProto$f.hasOwnProperty;
+    var hasOwnProperty$e = objectProto$f.hasOwnProperty;
 
     /**
      * Checks if a hash value for `key` exists.
@@ -11838,7 +11954,7 @@
      */
     function hashHas(key) {
       var data = this.__data__;
-      return nativeCreate ? (data[key] !== undefined) : hasOwnProperty$d.call(data, key);
+      return nativeCreate ? (data[key] !== undefined) : hasOwnProperty$e.call(data, key);
     }
 
     /** Used to stand-in for `undefined` hash values. */
@@ -12534,7 +12650,7 @@
     var funcToString$2 = funcProto$2.toString;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$e = objectProto$g.hasOwnProperty;
+    var hasOwnProperty$f = objectProto$g.hasOwnProperty;
 
     /** Used to infer the `Object` constructor. */
     var objectCtorString = funcToString$2.call(Object);
@@ -12575,7 +12691,7 @@
       if (proto === null) {
         return true;
       }
-      var Ctor = hasOwnProperty$e.call(proto, 'constructor') && proto.constructor;
+      var Ctor = hasOwnProperty$f.call(proto, 'constructor') && proto.constructor;
       return typeof Ctor == 'function' && Ctor instanceof Ctor &&
         funcToString$2.call(Ctor) == objectCtorString;
     }
@@ -13946,7 +14062,7 @@
     var objectProto$i = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$f = objectProto$i.hasOwnProperty;
+    var hasOwnProperty$g = objectProto$i.hasOwnProperty;
 
     /**
      * Initializes an array clone.
@@ -13960,7 +14076,7 @@
           result = new array.constructor(length);
 
       // Add properties assigned by `RegExp#exec`.
-      if (length && typeof array[0] == 'string' && hasOwnProperty$f.call(array, 'index')) {
+      if (length && typeof array[0] == 'string' && hasOwnProperty$g.call(array, 'index')) {
         result.index = array.index;
         result.input = array.input;
       }
@@ -14885,7 +15001,7 @@
     var objectProto$j = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$g = objectProto$j.hasOwnProperty;
+    var hasOwnProperty$h = objectProto$j.hasOwnProperty;
 
     /**
      * A specialized version of `baseIsEqualDeep` for objects with support for
@@ -14913,7 +15029,7 @@
       var index = objLength;
       while (index--) {
         var key = objProps[index];
-        if (!(isPartial ? key in other : hasOwnProperty$g.call(other, key))) {
+        if (!(isPartial ? key in other : hasOwnProperty$h.call(other, key))) {
           return false;
         }
       }
@@ -14976,7 +15092,7 @@
     var objectProto$k = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$h = objectProto$k.hasOwnProperty;
+    var hasOwnProperty$i = objectProto$k.hasOwnProperty;
 
     /**
      * A specialized version of `baseIsEqual` for arrays and objects which performs
@@ -15019,8 +15135,8 @@
           : equalByTag(object, other, objTag, bitmask, customizer, equalFunc, stack);
       }
       if (!(bitmask & COMPARE_PARTIAL_FLAG$3)) {
-        var objIsWrapped = objIsObj && hasOwnProperty$h.call(object, '__wrapped__'),
-            othIsWrapped = othIsObj && hasOwnProperty$h.call(other, '__wrapped__');
+        var objIsWrapped = objIsObj && hasOwnProperty$i.call(object, '__wrapped__'),
+            othIsWrapped = othIsObj && hasOwnProperty$i.call(other, '__wrapped__');
 
         if (objIsWrapped || othIsWrapped) {
           var objUnwrapped = objIsWrapped ? object.value() : object,
@@ -15661,7 +15777,7 @@
     var objectProto$l = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$i = objectProto$l.hasOwnProperty;
+    var hasOwnProperty$j = objectProto$l.hasOwnProperty;
 
     /**
      * Creates an object composed of keys generated from the results of running
@@ -15686,7 +15802,7 @@
      * // => { '3': 2, '5': 1 }
      */
     var countBy = createAggregator(function(result, value, key) {
-      if (hasOwnProperty$i.call(result, key)) {
+      if (hasOwnProperty$j.call(result, key)) {
         ++result[key];
       } else {
         baseAssignValue(result, key, 1);
@@ -16070,7 +16186,7 @@
     var objectProto$m = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$j = objectProto$m.hasOwnProperty;
+    var hasOwnProperty$k = objectProto$m.hasOwnProperty;
 
     /**
      * Assigns own and inherited enumerable string keyed properties of source
@@ -16115,7 +16231,7 @@
           var value = object[key];
 
           if (value === undefined ||
-              (eq(value, objectProto$m[key]) && !hasOwnProperty$j.call(object, key))) {
+              (eq(value, objectProto$m[key]) && !hasOwnProperty$k.call(object, key))) {
             object[key] = source[key];
           }
         }
@@ -18359,7 +18475,7 @@
     var objectProto$n = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$k = objectProto$n.hasOwnProperty;
+    var hasOwnProperty$l = objectProto$n.hasOwnProperty;
 
     /**
      * Creates an object composed of keys generated from the results of running
@@ -18385,7 +18501,7 @@
      * // => { '3': ['one', 'two'], '5': ['three'] }
      */
     var groupBy = createAggregator(function(result, value, key) {
-      if (hasOwnProperty$k.call(result, key)) {
+      if (hasOwnProperty$l.call(result, key)) {
         result[key].push(value);
       } else {
         baseAssignValue(result, key, [value]);
@@ -18478,7 +18594,7 @@
     var objectProto$o = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$l = objectProto$o.hasOwnProperty;
+    var hasOwnProperty$m = objectProto$o.hasOwnProperty;
 
     /**
      * The base implementation of `_.has` without support for deep paths.
@@ -18489,7 +18605,7 @@
      * @returns {boolean} Returns `true` if `key` exists, else `false`.
      */
     function baseHas(object, key) {
-      return object != null && hasOwnProperty$l.call(object, key);
+      return object != null && hasOwnProperty$m.call(object, key);
     }
 
     /**
@@ -19009,7 +19125,7 @@
     var objectProto$q = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$m = objectProto$q.hasOwnProperty;
+    var hasOwnProperty$n = objectProto$q.hasOwnProperty;
 
     /**
      * Used to resolve the
@@ -19050,7 +19166,7 @@
         value = nativeObjectToString$4.call(value);
       }
 
-      if (hasOwnProperty$m.call(result, value)) {
+      if (hasOwnProperty$n.call(result, value)) {
         result[value].push(key);
       } else {
         result[value] = [key];
@@ -19265,7 +19381,7 @@
     var objectProto$r = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$n = objectProto$r.hasOwnProperty;
+    var hasOwnProperty$o = objectProto$r.hasOwnProperty;
 
     /**
      * Checks if `value` is an empty object, collection, map, or set.
@@ -19317,7 +19433,7 @@
         return !baseKeys(value).length;
       }
       for (var key in value) {
-        if (hasOwnProperty$n.call(value, key)) {
+        if (hasOwnProperty$o.call(value, key)) {
           return false;
         }
       }
@@ -24039,7 +24155,7 @@
     var objectProto$s = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$o = objectProto$s.hasOwnProperty;
+    var hasOwnProperty$p = objectProto$s.hasOwnProperty;
 
     /**
      * Used by `_.defaults` to customize its `_.assignIn` use to assign properties
@@ -24055,7 +24171,7 @@
      */
     function customDefaultsAssignIn(objValue, srcValue, key, object) {
       if (objValue === undefined ||
-          (eq(objValue, objectProto$s[key]) && !hasOwnProperty$o.call(object, key))) {
+          (eq(objValue, objectProto$s[key]) && !hasOwnProperty$p.call(object, key))) {
         return srcValue;
       }
       return objValue;
@@ -26175,7 +26291,7 @@
         objectProto$t = Object.prototype;
 
     /** Used to check objects for own properties. */
-    var hasOwnProperty$p = objectProto$t.hasOwnProperty;
+    var hasOwnProperty$q = objectProto$t.hasOwnProperty;
 
     /** Built-in value references. */
     var symIterator$1 = Symbol$2 ? Symbol$2.iterator : undefined;
@@ -26519,7 +26635,7 @@
     mixin$1(lodash, (function() {
       var source = {};
       baseForOwn(lodash, function(func$$1, methodName) {
-        if (!hasOwnProperty$p.call(lodash.prototype, methodName)) {
+        if (!hasOwnProperty$q.call(lodash.prototype, methodName)) {
           source[methodName] = func$$1;
         }
       });
@@ -26762,120 +26878,6 @@
      * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
      */
 
-    // Copyright Joyent, Inc. and other Node contributors.
-
-    // If obj.hasOwnProperty has been overridden, then calling
-    // obj.hasOwnProperty(prop) will break.
-    // See: https://github.com/joyent/node/issues/1707
-    function hasOwnProperty$q(obj, prop) {
-      return Object.prototype.hasOwnProperty.call(obj, prop);
-    }
-
-    var decode = function(qs, sep, eq, options) {
-      sep = sep || '&';
-      eq = eq || '=';
-      var obj = {};
-
-      if (typeof qs !== 'string' || qs.length === 0) {
-        return obj;
-      }
-
-      var regexp = /\+/g;
-      qs = qs.split(sep);
-
-      var maxKeys = 1000;
-      if (options && typeof options.maxKeys === 'number') {
-        maxKeys = options.maxKeys;
-      }
-
-      var len = qs.length;
-      // maxKeys <= 0 means that we should not limit keys count
-      if (maxKeys > 0 && len > maxKeys) {
-        len = maxKeys;
-      }
-
-      for (var i = 0; i < len; ++i) {
-        var x = qs[i].replace(regexp, '%20'),
-            idx = x.indexOf(eq),
-            kstr, vstr, k, v;
-
-        if (idx >= 0) {
-          kstr = x.substr(0, idx);
-          vstr = x.substr(idx + 1);
-        } else {
-          kstr = x;
-          vstr = '';
-        }
-
-        k = decodeURIComponent(kstr);
-        v = decodeURIComponent(vstr);
-
-        if (!hasOwnProperty$q(obj, k)) {
-          obj[k] = v;
-        } else if (Array.isArray(obj[k])) {
-          obj[k].push(v);
-        } else {
-          obj[k] = [obj[k], v];
-        }
-      }
-
-      return obj;
-    };
-
-    // Copyright Joyent, Inc. and other Node contributors.
-
-    var stringifyPrimitive = function(v) {
-      switch (typeof v) {
-        case 'string':
-          return v;
-
-        case 'boolean':
-          return v ? 'true' : 'false';
-
-        case 'number':
-          return isFinite(v) ? v : '';
-
-        default:
-          return '';
-      }
-    };
-
-    var encode = function(obj, sep, eq, name) {
-      sep = sep || '&';
-      eq = eq || '=';
-      if (obj === null) {
-        obj = undefined;
-      }
-
-      if (typeof obj === 'object') {
-        return Object.keys(obj).map(function(k) {
-          var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-          if (Array.isArray(obj[k])) {
-            return obj[k].map(function(v) {
-              return ks + encodeURIComponent(stringifyPrimitive(v));
-            }).join(sep);
-          } else {
-            return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
-          }
-        }).join(sep);
-
-      }
-
-      if (!name) return '';
-      return encodeURIComponent(stringifyPrimitive(name)) + eq +
-             encodeURIComponent(stringifyPrimitive(obj));
-    };
-
-    var querystring = createCommonjsModule(function (module, exports) {
-
-    exports.decode = exports.parse = decode;
-    exports.encode = exports.stringify = encode;
-    });
-    var querystring_1 = querystring.decode;
-    var querystring_2 = querystring.parse;
-    var querystring_3 = querystring.encode;
-    var querystring_4 = querystring.stringify;
-
     var Gists = /** @class */ (function () {
         function Gists(
         // public readonly username: string,
@@ -26908,6 +26910,7 @@
         };
         return Gists;
     }());
+    //# sourceMappingURL=gists.js.map
 
     var contentMarkdown = "# Purpose of Dijkstra's Algorithm\r\n\r\nGiven\r\n\r\n1. a directed graph §G = (V, A)§,\r\n2. an arc weight §l(a)§ for each arc §a in A§,\r\n3. a root node §s in V§,\r\n\r\nfind the shortest path from the root node to any other node.\r\n\r\n# Dijkstra's Algorithm: Implementation\r\n\r\nGiven directed graph §(V, A)§.\r\n\r\n## Auxiliary data:\r\n\r\n1. Temporary distance value for each node. §forall v in V: delta(v) in RR§\r\n2. Bounded priority queue §Q§ of size §|V| - 1§, containing graph nodes and\r\n   their distance value as\r\n\r\n## Algorithm:\r\n\r\n1. Set distance of start node §s§ to 0: §delta(s) := 0§.\r\n2. Set distance of all other nodes to §infty§: §forall v in V setminus {s}:\r\n   delta(v) := infty§\r\n3. Insert all nodes into priority queue §Q§.\r\n4. While the queue contains a node with a key/distance value less than infinite:\r\n    5. Extract the minimum node §v§ from the queue.\r\n    6. For each node §w§ which can be reached from §v§, update that node's\r\n       distance if is reduced by taking that path. For each outgoing arc §a =\r\n       (v, w) \\in A§ such that §w \\in Q§, set §delta(w) := min {delta(w),\r\n       delta(v) + l(a)}§\r\n\r\n# Dijkstra's Algorithm: Prerequisite\r\n\r\nThe weight of all edges must be greater or equal to zero. Given directed graph\r\n§(V, A)§, §\\forall a \\in A: l(a) \\ge 0§, where §l(a)§ is the length of edge §a§.\r\n\r\n# Dijkstra's Algorithm: Complexity\r\n\r\n§n = |V|§ (number of nodes)\r\n\r\n§m = |A|§ (number of arcs)\r\n\r\n§T(n)§: Worst case complexity for extraction/insertion of nodes in §Q§.\r\n\r\nWorst case complexity: §O(T(n) \\* (n + m))§\r\n\r\n## Proof\r\n\r\nEach node is extracted and inserted in Q at most once, which gives §O(T(n) \\*\r\nn)§.\r\n\r\nAlso, each arc §(v, w) \\in A§ is touched at most once, when §v§ is extracted\r\nfrom §Q§, which gives §O(T(n) \\* m)§ for all decrease-key operations.\r\n\r\n# Dijkstra's Algorithm: Heuristics\r\n\r\n1. Do not insert nodes with distance §infty§ into the queue.\r\n2. Early termination variant: stop when the target node has been extracted from\r\n   the queue.\r\n3. Bidirectional search: In the single-source, single-target case: Interleave\r\n   two searches: one from §s§ on §G§ and one from §t§ on the inverse of §G§.\r\n   When one node has been extracted by both searches,\r\n4. When performing multiple searches on same large graph:\r\n\r\n    Use heuristics 1. and 2.\r\n\r\n    Instead of initializing the distances on every search, use a version\r\n    counter. If the version counter does not match the current search, assume\r\n    §delta(v) = infty§.\r\n\r\n# Bounded Priority Queue: Methods\r\n\r\n1. insert\r\n2. extract minimum\r\n3. find minimum\r\n4. decrease key\r\n5. number\r\n\r\n# Path: Simple\r\n\r\nA path is simple if it does not meet any node more than once.\r\n\r\n# Path: Ordinary\r\n\r\nAn ordinary path in an undirected graph is a finite ordered sequence §({v_1,\r\nv_2}, {v_2, v_3}, ..., {v\\_(k-2), v\\_(k-2)}, {v\\_(k-2), v\\_(k-2)})§.\r\n\r\nAn ordinary path in a directed graph is a finite ordered sequence §((v_1, v_2),\r\n(v_2, v_3), ..., (v\\_(k-2), v\\_(k-2)), (v\\_(k-2), v\\_(k-2)))§.\r\n\r\n# Path: Generalized\r\n\r\nAlso known as a weak path.\r\n\r\nA generalized path in a directed graph is a finite sequence §((v_1, v_2), (v_2,\r\nv_3), ..., (v\\_(k-2), v\\_(k-2)), (v\\_(k-2), v\\_(k-2)))§, such that turning some\r\n(§>= 0§) of the arcs yields an ordinary path.\r\n\r\n# Graph: Reachability\r\n\r\nA node §t in V§ is _reachable_ from §s in V§ if there is a path from §s§ to §t§\r\nin the graph.\r\n\r\n# Path: Internal Nodes\r\n\r\nThe internal nodes of a path are all the nodes of that path except the start and\r\nend nodes. If the start or end nodes appear more than once on the path, they are\r\nalso internal nodes.\r\n\r\n# Path: Disjointedness\r\n\r\nTwo paths are **edge-disjoint**, if they have no edge in common.\r\n\r\nTwo paths are **arc-disjoint**, if they have no arc in common.\r\n\r\nTwo paths are **(internally) node-disjoint** if they have no node in common that\r\nis internal on either path.\r\n\r\n# Inclusion-Minimal/Maximal\r\n\r\nLet §ccS§ (read calligraphic S) be a set of (multi)sets.\r\n\r\n1. A set §S in ccS§ is **inclusion-minimal** if no other set (in §ccS§) is a\r\n   subset of it. (If §not EE S' in ccS setminus S: S' sub S§)\r\n\r\n2. A set §S in ccS§ is **inclusion-maximal** if no other set (in §ccS§) is a\r\n   proper superset of it / if it is not a proper subset of any other set (in\r\n   §ccS§). (If §not EE S' in ccS setminus S: S' sup S§)\r\n\r\n<!-- Let $\\mathcal{S}$ (read calligraphic S) be a set of (multi)sets.\r\n\r\n1. A set $S\\in\\mathcal{S}$ is **inclusion-minimal** (resp.\r\n   **inclusion-maximal**) in $\\mathcal{S}$ if $S'\\subsetneq S$ (resp.\r\n   $S'\\supsetneq S$) for no $S'\\in\\mathcal{S}\\setminus\\{S\\}$.\r\n2. A set $S\\in\\mathcal{S}$ is **cardinality-minimal** (resp.\r\n   **cardinality-maximal**) in $\\mathcal{S}$ if $|S'|<|S|$ (resp. $|S'|>|S|$)\r\n   for no $S'\\in\\mathcal{S}\\setminus\\{S\\}$. -->\r\n\r\n# Cardinality-Minimal/Maximal\r\n\r\nLet §ccS§ (read calligraphic S) be a set of (multi)sets.\r\n\r\n1. A set §S in ccS§ is **cardinality-minimal** if it has the smallest number of\r\n   elements of any set (in §ccS§). (§AA S' in ccS: |S| <= |S'|§)\r\n2. A set §S in ccS§ is **cardinality-maximal** if it has the largest number of\r\n   elements of any set (in §ccS§). (§AA S' in ccS: |S| >= |S'|§)\r\n\r\n# Connectedness\r\n\r\nAn **undirected graph** is said to be **connected** if every pair of nodes is\r\nconnected by a path.\r\n\r\nIt is §k§-connected if every pair of nodes is connected by at least §k§\r\n**internally node-disjoint paths**. _Connected_ means _1-connected_.\r\n_2-connected_ is synonmous with _biconnected_.\r\n\r\n# Weak Connectedness\r\n\r\nA **directed graph** is said to be _weakly connected_ if every pair of nodes is\r\nconnected by a **generalized/weak path**.\r\n\r\n# Strong Connectedness\r\n\r\nA **directed graph** is said to be _strongly connected_ if every **ordered\r\npair** of nodes is connected by a an **ordinary path**.\r\n\r\n# Articulation Node\r\n\r\nAn arcticulation node in a **connected undirected graph** is a node such that\r\nthe graph would become disconnected if it and its incident arcs were removed.\r\n\r\n# Bridge\r\n\r\nA bridge in a **connected undirected graph** is an edge such that the graph\r\nwould become disconnected if it were removed.\r\n\r\n# Subgraph\r\n\r\nLet §G_1 = (V_1, E_1)§ and §G_2 = (V_2, E_2)§ be two simple undirected graphs.\r\n\r\n§G_1§ is a subgraph of §G_2§ if there is §V' sube V_2§ and bijection §varphi:V_1\r\n-> V'§ such that §{v, w} in E_1§ implies §{varphi(v), varphi(w)} in E_2§.\r\n\r\nIf all the edges of §G_2§ defined on §V'§ are also in §G_1§, we say §G_2§ is the\r\ngraph **induced** by §V'§.\r\n\r\n# Spanning subgraph\r\n\r\nA spanning subgraph of an undirected or directed graph §G§ is a subgraph which\r\ncontains all nodes of §G§.\r\n\r\n# Graph: Simple\r\n\r\nA directed or undirected graph is simple, if:\r\n\r\n1. No node is paired with itself in §A§/§E§.\r\n2. The multiset §A§/§E§ is a sete. I.e., no edge is \"double\".\r\n\r\n# Arc: Lexicographically Smaller\r\n\r\nAssuming, for each node, an arbitrary but fixed ordering of outgoing arcs, an\r\narc §(v,w)§ preceding and arc §(v, w')§ is lexicographically smaller than §(v,\r\nw')§.\r\n\r\n# Path: Lexicographically Smaller\r\n\r\nLet §p§ and §p'§ be two paths that start from the same node §v in V§. Let §w§ be\r\nthe last common node such that the subpaths of §p§ and §p'§ are identical. If\r\nthe next arc of §p§ from §w§ onwards is lexicographically smaller than the next\r\narc of §p'§, §p§ is **lexicographically smaller** than §p'§.\r\n\r\nThe lexicograpically smallest path from §v in V§ to §w in V§ is **well defined**\r\nand **unique**.\r\n\r\n# Node: Lexicographically Smaller\r\n\r\n**With respect to a starting node §s in V§**, a node §v in V§ is\r\nlexicographically smaller than §w in V§ if the lexicographically smallest path\r\nfrom §s§ to §v§ is lexicographically smaller than the lexicographically smallest\r\npath from §s§ to §w§.\r\n\r\n# Node/Path: Lexicographical Order\r\n\r\nA node §v in V§ is lexicographically smaller than a path §p§ if §v§ does not\r\nbelong to §p§ and the lexicographically smallest path from the start of $p$ to\r\n§v§ precedes §p§.\r\n\r\nA node §v in V§ is lexicographically larger than a path §p§ if §v§ does not\r\nbelong to §p§ and the **lexicographically smallest** path from the start of $p$\r\nto §v§ succeeds §p§.\r\n\r\n# Forest\r\n\r\nA _forest_ is a **cycle-free undirected graph**.\r\n\r\nFor a forest §G = (V, E)§ Let §n = |V|§ be the number of nodes, §m = |E|§ the\r\nnumber of edges, and §k§ the number of trees in the forest. Then it is §m = n -\r\nk§.\r\n\r\nProof?\r\n\r\n# Tree\r\n\r\nA _tree_ is a **connected forest**.\r\n\r\n# Branching\r\n\r\nA _branching_ is a **cycle-free directed** graph such that the **indegree** of\r\neach node is zero or one.\r\n\r\n# Arborescence\r\n\r\nAn _arborescence_ is a **branching** such that **exactly one node has indegree\r\nzero**.\r\n\r\nFor branchings, this condition is equivalent to weak connectedness.\r\n\r\nAlso known as a **rooted tree**, the unique node with indegree zero is the\r\n**root**.\r\n\r\n# Head/Tail\r\n\r\nLet §G = (V, A)§ be a directed graph.\r\n\r\nFor an arc §a = (v, w) in A§, §v§ is the _tail_ of §a§, and §w§ is the _head_ of\r\n§a§.\r\n\r\n# Outgoing/Incoming\r\n\r\nLet §G = (V, A)§ be a directed graph.\r\n\r\nAn arc §(v, w) in A§ is an outgoing arc of §v§ and an incoming arc of §w§.\r\n\r\n# Outdegree/Indegree\r\n\r\nLet §G = (V, A)§ be a directed graph.\r\n\r\nThe outdegree of a node §v in V§ is the number of **outgoing arcs**, the\r\nindegree of §v§ is the number of **incoming arcs**.\r\n";
 
@@ -30012,11 +30015,79 @@
             });
         });
     }
-    var cardTexts = contentMarkdown
-        .split(/^(?=#[^#])/gm)
-        .map(function (x) { return x.trim(); })
-        .filter(function (x) { return x !== ""; });
-    var cardRegex = /^#(.*)$\s*(?:^slug:(.*)$)?([\s\S]*)/m;
+    function b64EncodeUnicode(str) {
+        // first we use encodeURIComponent to get percent-encoded UTF-8,
+        // then we convert the percent encodings into raw bytes which
+        // can be fed into btoa.
+        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function toSolidBytes(match, p1) {
+            return String.fromCharCode(parseInt(p1, 16));
+        }));
+    }
+    function b64DecodeUnicode(str) {
+        // Going backwards: from bytestream, to percent-encoding, to original string.
+        return decodeURIComponent(atob(str)
+            .split("")
+            .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+            .join(""));
+    }
+    var path = "content/graphs.md";
+    var contentURL = "https://api.github.com/repos/" +
+        "NaridaL" +
+        "/" +
+        "learn" +
+        "/contents/" +
+        encodeURI(path) +
+        "?" +
+        querystring.stringify({ access_token: gs.token, ref: "master" });
+    function updateCard(card, newText) {
+        return fetch(contentURL, {
+            cache: "no-store",
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (_a) {
+            var sha = _a.sha, content = _a.content;
+            cards = parseCards(b64DecodeUnicode(content)).map(function (c) {
+                return c.slug == card.slug
+                    ? {
+                        title: card.title,
+                        slug: card.slug,
+                        content: newText,
+                    }
+                    : c;
+            });
+            var newContentContent = cards
+                .map(function (c) {
+                return "# " +
+                    c.title.trim() +
+                    "\n\n" +
+                    c.content.trim() +
+                    "\n";
+            })
+                .join("\n");
+            console.log("new content" + newContentContent);
+            return fetch(contentURL + "?", {
+                method: "PUT",
+                body: JSON.stringify({
+                    message: "update card " + card.title,
+                    content: b64EncodeUnicode(newContentContent),
+                    sha: sha,
+                }),
+            });
+        })
+            .then(function (r) { return r.json(); });
+    }
+    function loadContentFromGitHub() {
+        return fetch(contentURL, {
+            cache: "no-store",
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (_a) {
+            var sha = _a.sha, content = _a.content;
+            cards = parseCards(b64DecodeUnicode(content));
+        });
+    }
     var Card$1 = /** @class */ (function () {
         function Card$$1(title, slug, content) {
             this.title = title;
@@ -30025,10 +30096,19 @@
         }
         return Card$$1;
     }());
-    var cards = cardTexts.map(function (text) {
-        var _a = text.match(cardRegex), title = _a[1], slug = _a[2], content = _a[3];
-        return new Card$1(title.trim(), slug ? slug.trim() : slugify(title), content.trim());
-    });
+    function parseCards(contentMarkdown$$1) {
+        var cardRegex = /^#(.*)$\s*(?:^slug:(.*)$)?([\s\S]*)/m;
+        var cardTexts = contentMarkdown$$1
+            .split(/^(?=#[^#])/gm)
+            .map(function (x) { return x.trim(); })
+            .filter(function (x) { return x !== ""; });
+        return cardTexts.map(function (text) {
+            var _a = text.match(cardRegex), title = _a[1], slug = _a[2], content = _a[3];
+            return new Card$1(title.trim(), slug ? slug.trim() : slugify(title), content.trim());
+        });
+    }
+    var cards = parseCards(contentMarkdown);
+    loadContentFromGitHub();
     console.log(cards);
     var AppState = /** @class */ (function () {
         function AppState() {
@@ -30195,7 +30275,8 @@
                         var result$$1 = (React__default.createElement(CardOverview, { cards: cards, cardStates: _this.state.cardStates, info: _this.state.info, error: _this.state.error }));
                         _this.state.info = undefined;
                         return result$$1;
-                    } })));
+                    } }),
+                React__default.createElement(Route, { exact: true, path: "/edit/:cardslug", component: EditCard })));
         };
         App.prototype.componentDidUpdate = function () {
             MathJax.Hub.Queue(["Typeset", MathJax.Hub, ReactDOM.findDOMNode(this)]);
@@ -30206,45 +30287,100 @@
         var card = props.card, style = props.style, htmlAttributes = __rest(props, ["card", "style"]);
         return (React__default.createElement("div", __assign({}, htmlAttributes, { style: __assign({}, style, { padding: "4px" }) }),
             React__default.createElement("h3", { style: { textAlign: "center" } }, card.title),
+            React__default.createElement(Link, { to: "/edit/" + card.slug }, "Edit"),
             React__default.createElement("div", { dangerouslySetInnerHTML: {
                     __html: converter.makeHtml(card.content),
                 } })));
     }
     function CardAnswer(_a) {
         var card = _a.card, answer = _a.answer;
-        return (React__default.createElement(BackToOverview, null,
-            React__default.createElement("div", { style: {
+        return (React__default.createElement("div", { style: {
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+            } },
+            React__default.createElement(BackToOverview, null),
+            React__default.createElement(CardCard, { card: card, style: { flexGrow: 1 } }),
+            React__default.createElement("div", null,
+                React__default.createElement(Button, { style: { width: "50%" }, color: "success", onClick: function () { return answer(true); } }, "Correct"),
+                React__default.createElement(Button, { style: { width: "50%" }, color: "warning", onClick: function () { return answer(false); } }, "Incorrect"))));
+    }
+    var EditCardState = /** @class */ (function () {
+        function EditCardState(currentContent) {
+            this.currentContent = currentContent;
+            this.saving = false;
+        }
+        return EditCardState;
+    }());
+    var EditCard = /** @class */ (function (_super) {
+        __extends(EditCard, _super);
+        function EditCard(props) {
+            var _this = _super.call(this, props) || this;
+            _this.save = function () { return __awaiter(_this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            this.setState({ saving: true });
+                            return [4 /*yield*/, updateCard(this.getCard(), this.state.currentContent)];
+                        case 1:
+                            _a.sent();
+                            this.setState({ saving: false });
+                            return [2 /*return*/];
+                    }
+                });
+            }); };
+            _this.state = new EditCardState(_this.getCard().content);
+            return _this;
+        }
+        EditCard.prototype.getCard = function () {
+            var _this = this;
+            return cards.find(function (c) { return c.slug == _this.props.match.params.cardslug; });
+        };
+        EditCard.prototype.getDerivedStateFromProps = function (nextProps) {
+            console.log("getDerivedStateFromProps", this.props, nextProps);
+            if (nextProps.match.params.cardslug !== this.props.match.params.cardslug) {
+                console.log("here");
+                return { currentContent: this.getCard().content };
+            }
+        };
+        EditCard.prototype.render = function () {
+            var _this = this;
+            return (React__default.createElement("div", { style: {
                     display: "flex",
                     flexDirection: "column",
                     height: "100%",
                 } },
-                React__default.createElement(CardCard, { card: card, style: { flexGrow: 1 } }),
-                React__default.createElement("div", null,
-                    React__default.createElement(Button, { style: { width: "50%" }, color: "success", onClick: function () { return answer(true); } }, "Correct"),
-                    React__default.createElement(Button, { style: { width: "50%" }, color: "warning", onClick: function () { return answer(false); } }, "Incorrect")))));
-    }
-    function CardQuestion(_a) {
-        var card = _a.card, onContinue = _a.onContinue;
-        return (React__default.createElement(BackToOverview, null,
-            React__default.createElement("div", { onClick: onContinue, style: {
-                    flexGrow: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                } },
+                React__default.createElement(BackToOverview, null),
                 React__default.createElement("h1", { style: {
                         margin: "auto 8px",
                         textAlign: "center",
-                    } }, card.title))));
-    }
-    function BackToOverview(props) {
-        return (React__default.createElement("div", { style: {
+                    } }, this.getCard().title),
+                React__default.createElement(Input, { style: { flexGrow: 1, minHeight: "400px" }, type: "textarea", name: "text", id: "exampleText", value: this.state.currentContent, onChange: function (e) {
+                        return _this.setState({ currentContent: e.target.value });
+                    } }),
+                React__default.createElement(Button, { onClick: this.save, disabled: this.state.saving }, this.state.saving
+                    ? "Saving..."
+                    : this.getCard().content != this.state.currentContent
+                        ? "Save"
+                        : "Saved")));
+        };
+        return EditCard;
+    }(React.Component));
+    function CardQuestion(_a) {
+        var card = _a.card, onContinue = _a.onContinue;
+        return (React__default.createElement("div", { onClick: onContinue, style: {
+                flexGrow: 1,
                 display: "flex",
                 justifyContent: "center",
-                height: "100%",
-                flexDirection: "column",
             } },
-            React__default.createElement(Link, { to: "/" }, "Zur\u00FCck zur \u00DCbersicht"),
-            props.children));
+            React__default.createElement(BackToOverview, null),
+            React__default.createElement("h1", { style: {
+                    margin: "auto 8px",
+                    textAlign: "center",
+                } }, card.title)));
+    }
+    function BackToOverview(props) {
+        return React__default.createElement(Link, { to: "/" }, "Zur\u00FCck zur \u00DCbersicht");
     }
     function CardOverview(_a) {
         var cards = _a.cards, info = _a.info, error = _a.error, cardStates = _a.cardStates;
@@ -30282,6 +30418,7 @@
 
     ReactDOM.render(React__default.createElement(BrowserRouter, { basename: "/learn/" },
         React__default.createElement(App, null)), document.getElementById("vcs-root"));
+    //# sourceMappingURL=index.js.map
 
 }(React,ReactDOM,showdown));
 //# sourceMappingURL=bundle.js.map
