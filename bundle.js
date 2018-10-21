@@ -5239,6 +5239,28 @@
       vertical: propTypes.bool
     };
 
+    var defaultProps$13 = {
+      tag: 'div',
+      role: 'group'
+    };
+
+    var ButtonGroup = function ButtonGroup(props) {
+      var className = props.className,
+          cssModule = props.cssModule,
+          size = props.size,
+          vertical = props.vertical,
+          Tag = props.tag,
+          attributes = objectWithoutProperties(props, ['className', 'cssModule', 'size', 'vertical', 'tag']);
+
+
+      var classes = mapToCssModules(classnames(className, size ? 'btn-group-' + size : false, vertical ? 'btn-group-vertical' : 'btn-group'), cssModule);
+
+      return React__default.createElement(Tag, _extends$4({}, attributes, { className: classes }));
+    };
+
+    ButtonGroup.propTypes = propTypes$14;
+    ButtonGroup.defaultProps = defaultProps$13;
+
     var propTypes$15 = {
       tag: propTypes.oneOfType([propTypes.func, propTypes.string]),
       'aria-label': propTypes.string,
@@ -30316,6 +30338,28 @@
         __extends(EditCard, _super);
         function EditCard(props) {
             var _this = _super.call(this, props) || this;
+            _this.wrap = function (char) {
+                _this.textarea.selectionStart;
+                var v = _this.textarea.value;
+                v = strSplice(v, _this.textarea.selectionEnd, char);
+                v = strSplice(v, _this.textarea.selectionStart, char);
+                var start = _this.textarea.selectionStart + char.length;
+                var end = _this.textarea.selectionEnd + char.length;
+                _this.textarea.value = v;
+                _this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
+                _this.textarea.selectionStart = start;
+                _this.textarea.selectionEnd = end;
+                _this.textarea.focus();
+            };
+            _this.insert = function (char) {
+                var start = _this.textarea.selectionStart + char.length;
+                var end = start;
+                _this.textarea.value = strSplice(_this.textarea.value, _this.textarea.selectionStart, char, _this.textarea.selectionEnd - _this.textarea.selectionStart);
+                _this.textarea.dispatchEvent(new Event("input", { bubbles: true }));
+                _this.textarea.selectionStart = start;
+                _this.textarea.selectionEnd = end;
+                _this.textarea.focus();
+            };
             _this.save = function () { return __awaiter(_this, void 0, void 0, function () {
                 return __generator(this, function (_a) {
                     switch (_a.label) {
@@ -30345,6 +30389,7 @@
         };
         EditCard.prototype.render = function () {
             var _this = this;
+            console.log(this.getCard().content != this.state.currentContent, this.getCard().content, this.state.currentContent);
             return (React__default.createElement("div", { style: {
                     display: "flex",
                     flexDirection: "column",
@@ -30357,7 +30402,12 @@
                     } }, this.getCard().title),
                 React__default.createElement(Input, { style: { flexGrow: 1, minHeight: "400px" }, type: "textarea", name: "text", id: "exampleText", value: this.state.currentContent, onChange: function (e) {
                         return _this.setState({ currentContent: e.target.value });
-                    } }),
+                    }, innerRef: function (r) { return (_this.textarea = r); } }),
+                React__default.createElement(ButtonGroup, { style: { display: "flex" } },
+                    React__default.createElement(Button, { color: "primary", style: { flex: 1 }, onClick: function () { return _this.wrap("§"); } }, "\u00A7"),
+                    React__default.createElement(Button, { color: "primary", style: { flex: 1 }, onClick: function () { return _this.wrap("**"); } }, "**"),
+                    React__default.createElement(Button, { color: "primary", style: { flex: 1 }, onClick: function () { return _this.wrap("_"); } }, "_"),
+                    React__default.createElement(Button, { color: "primary", style: { flex: 1 }, onClick: function () { return _this.insert("\\"); } }, "\\")),
                 React__default.createElement(Button, { onClick: this.save, disabled: this.state.saving }, this.state.saving
                     ? "Saving..."
                     : this.getCard().content != this.state.currentContent
@@ -30414,6 +30464,10 @@
             React__default.createElement(Input, { placeholder: "github API token w/ gist", onChange: function (e) {
                     return localStorage.setItem("learn_gisthub_token", e.target.value.trim());
                 }, defaultValue: localStorage.getItem("learn_gisthub_token") || "" })));
+    }
+    function strSplice(str, index, what, deleteCount) {
+        if (deleteCount === void 0) { deleteCount = 0; }
+        return str.substring(0, index) + what + str.substring(index + deleteCount);
     }
 
     ReactDOM.render(React__default.createElement(BrowserRouter, { basename: "/learn/" },
