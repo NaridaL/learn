@@ -10,13 +10,13 @@ import React, {
 import querystring from "querystring"
 import { int, V3, V, M4, DEG } from "ts3dutils"
 import slugify from "slugify"
-import { CardText, Button, Alert, Input } from "reactstrap"
+import { CardText, Button, Alert, Input, ButtonGroup } from "reactstrap"
 import { Converter } from "showdown"
 import _ from "lodash-es"
 import { Gists, GistDescriptor } from "./gists"
 
 import ReactDOM from "react-dom"
-import contentMarkdown from "../content/graphs.md"
+import contentMarkdown from "../content/optalgo.md"
 import {
 	Link,
 	Switch,
@@ -106,7 +106,7 @@ function b64DecodeUnicode(str) {
 	)
 }
 
-const path = "content/graphs.md"
+const path = "content/optalgo.md"
 const contentURL =
 	"https://api.github.com/repos/" +
 	"NaridaL" +
@@ -155,11 +155,11 @@ function updateCard(card: Card, newText: string) {
 		.then(r => r.json())
 }
 function loadContentFromGitHub() {
-	return fetch(contentURL, {
+	return fetch("content/optalgo.md", {
 		cache: "no-store",
 	})
-		.then(r => r.json() as Promise<GitHubFile>)
-		.then(({ sha, content }) => {
+		.then(r => r.text())
+		.then(content => {
 			cards = parseCards(b64DecodeUnicode(content))
 		})
 }
@@ -493,6 +493,7 @@ export class EditCard extends Component<
 	RouteComponentProps<{ cardslug: string }>,
 	EditCardState
 > {
+	textarea: HTMLTextAreaElement
 	constructor(props: RouteComponentProps<{ cardslug: string }>) {
 		super(props)
 		this.state = new EditCardState(this.getCard().content)
@@ -512,6 +513,11 @@ export class EditCard extends Component<
 		}
 	}
 	render() {
+		console.log(
+			this.getCard().content != this.state.currentContent,
+			this.getCard().content,
+			this.state.currentContent,
+		)
 		return (
 			<div
 				style={{
@@ -529,19 +535,52 @@ export class EditCard extends Component<
 				>
 					{this.getCard().title}
 				</h1>
-				<FormGroup style={{ flexGrow: 1 }}>
-					<Input
-						style={{ height: "100%" }}
-						type="textarea"
-						name="text"
-						id="exampleText"
-						value={this.state.currentContent}
-						onChange={e =>
-							this.setState({ currentContent: e.target.value })
-						}
-					/>
-				</FormGroup>
-				<Button onClick={this.save} disabled={this.state.saving}>
+				<Input
+					style={{ flexGrow: 1, minHeight: "400px" }}
+					type="textarea"
+					name="text"
+					id="exampleText"
+					value={this.state.currentContent}
+					onChange={e =>
+						this.setState({ currentContent: e.target.value })
+					}
+					innerRef={r => (this.textarea = r as any)}
+				/>
+				<ButtonGroup style={{ display: "flex" }}>
+					<Button
+						color="primary"
+						style={{ flex: 1 }}
+						onClick={() => this.wrap("§")}
+					>
+						§
+					</Button>
+					<Button
+						color="primary"
+						style={{ flex: 1 }}
+						onClick={() => this.wrap("**")}
+					>
+						**
+					</Button>
+					<Button
+						color="primary"
+						style={{ flex: 1 }}
+						onClick={() => this.wrap("_")}
+					>
+						_
+					</Button>
+					<Button
+						color="primary"
+						style={{ flex: 1 }}
+						onClick={() => this.insert("\\")}
+					>
+						\
+					</Button>
+				</ButtonGroup>
+				<Button
+					onClick={this.save}
+					disabled={this.state.saving}
+					color="warning"
+				>
 					{this.state.saving
 						? "Saving..."
 						: this.getCard().content != this.state.currentContent
@@ -550,6 +589,33 @@ export class EditCard extends Component<
 				</Button>
 			</div>
 		)
+	}
+	wrap = (char: string) => {
+		this.textarea.selectionStart
+		let v = this.textarea.value
+		v = strSplice(v, this.textarea.selectionEnd, char)
+		v = strSplice(v, this.textarea.selectionStart, char)
+		const start = this.textarea.selectionStart + char.length
+		const end = this.textarea.selectionEnd + char.length
+		this.textarea.value = v
+		this.textarea.dispatchEvent(new Event("input", { bubbles: true }))
+		this.textarea.selectionStart = start
+		this.textarea.selectionEnd = end
+		this.textarea.focus()
+	}
+	insert = (char: string) => {
+		const start = this.textarea.selectionStart + char.length
+		const end = start
+		this.textarea.value = strSplice(
+			this.textarea.value,
+			this.textarea.selectionStart,
+			char,
+			this.textarea.selectionEnd - this.textarea.selectionStart,
+		)
+		this.textarea.dispatchEvent(new Event("input", { bubbles: true }))
+		this.textarea.selectionStart = start
+		this.textarea.selectionEnd = end
+		this.textarea.focus()
 	}
 	save = async () => {
 		this.setState({ saving: true })
@@ -642,7 +708,15 @@ export function CardOverview({
 					</ul>
 				</React.Fragment>
 			))}
-			{/*  a6f75fadd2cafa535ef37fd6bc9aedabf507b1ee  */}
+			<div>
+				Total Progress:{" "}
+				{cards.reduce(
+					(acc, card) =>
+						acc + getCardState(cardStates, card.slug).level - 1,
+					0,
+				)}
+				/{cards.length * 4}
+			</div>
 			<Input
 				placeholder="github API token w/ gist"
 				onChange={e =>
@@ -655,4 +729,8 @@ export function CardOverview({
 			/>
 		</>
 	)
+}
+
+function strSplice(str: string, index: int, what: string, deleteCount = 0) {
+	return str.substring(0, index) + what + str.substring(index + deleteCount)
 }

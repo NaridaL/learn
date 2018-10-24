@@ -224,11 +224,11 @@ path from §s§ to §w§.
 # Node/Path: Lexicographical Order
 
 A node §v in V§ is lexicographically smaller than a path §p§ if §v§ does not
-belong to §p§ and the lexicographically smallest path from the start of $p$ to
+belong to §p§ and the lexicographically smallest path from the start of §p§ to
 §v§ precedes §p§.
 
 A node §v in V§ is lexicographically larger than a path §p§ if §v§ does not
-belong to §p§ and the **lexicographically smallest** path from the start of $p$
+belong to §p§ and the **lexicographically smallest** path from the start of §p§
 to §v§ succeeds §p§.
 
 # Forest
@@ -279,3 +279,37 @@ Let §G = (V, A)§ be a directed graph.
 
 The outdegree of a node §v in V§ is the number of **outgoing arcs**, the
 indegree of §v§ is the number of **incoming arcs**.
+
+# Depth-First Search: Invariant/Variant
+
+Given:
+
+1. A stack §S§ whose elements are nodes in §V§.
+2. Each node has a **current arc** §a_v in V§, which is either void or an
+   outgoing arc §a_v = (v, w)§ of §v§. (May be viewed as an iterator over the
+   list of all outgoing arcs.)
+
+**Invariant**: Before and after each iteration:
+
+1. §S§ forms a path §p§ from the start node §s§ to some other node, that is, the
+   order of the ndoes on §p§ is the order in which they appear in §S§ (start
+   node §s§ at the bottom of §S§).
+2. For each node not yet seen, the current arc is the first arc (or void if
+   outdegree = 0).
+3. For each node §v§ on §p§:
+    1. If there are arcs §(v, w) in A§ such that w is not yet seen, the current
+       arc equals or precedes the first such arc.
+    2. The subpath of §p§ from the start node §s§ to §v§ is the
+       lexicographically first §(s, v)§-path.
+4. The nodes on §p§ are seen but not finished. Let §p + a§ denote the
+   concatenation of §p§ with the current arc §a§ of the last node of §p§. The
+   nodes that lexicographically precede §p + a§ are seen and finished, and the
+   nodes that lexicographically succeed §p + a§ are neither seen nor finished.
+   (Nothing is said about the head of §a§).
+
+**Variant**: Either one node is seen for the first time or finished, or
+(inclusive) the current arc of one node is moved forward.
+
+# Breadth-First Search
+
+§Q = "(" ubrace(v_1, ..., v_l)\_k, ubrace(v\_(l+1), ... v_n)\_(k+1) ")"§
