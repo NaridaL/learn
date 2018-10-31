@@ -93,3 +93,7 @@ Given a feasible point §f in F_I§, it is useful to define a set §N_I(f)§ of
 points which are **"close" is some sense** to the point §f§.
 
 A _neighborhood_ is a mapping §N_I : F_I |-> 2^(F_I)§.
+
+# Neighborhood: Exact
+
+An optimization problem neighborhood is _exact_ **iff. every local minimum is also a global minimum**.
