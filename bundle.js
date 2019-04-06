@@ -26934,8 +26934,6 @@
     }());
     //# sourceMappingURL=gists.js.map
 
-    var contentMarkdown = "# Types of Algorithmic Problems\r\n\r\n1.  **Decision Problem**: is there a solution or not.\r\n2.  **Construction problem**: if there is a solution, construct one.\r\n3.  **Enumeration problem**: give all solutions.\r\n4.  **Optimization problem**: construct a solution that is optimal (or at least\r\n    nearly optimal) subject to a given objective.\r\n\r\nConstruction and optimization problems are by far the most important in\r\npractice.\r\n\r\nAlgorithms for decision problems are typically constructive. Construction\r\nproblems may be viewed as an optimization problem with all solutions having\r\nequal value.\r\n\r\nMany generic algorithms are applicable only to optimization problems.\r\n\r\n--> Focus on optimization problems.\r\n\r\n# Optimization Problem: Ingredients\r\n\r\n1.  Feasible inputs (a.k.a. instances). (Zulässigen Inputs/Eingaben/Instanzen)\r\n\r\n    A set §ccI§ of potential inputs.\r\n\r\n2.  Feasible outputs for a given instance.\r\n\r\n    For each §I in ccI§ a set §F_I§ of **feasible solutions**.\r\n\r\n3.  The objective.\r\n\r\n    Objective function §obj_I : F_I -> RR§ and a direction: **minimizing** or\r\n    **maximizing**.\r\n\r\n4.  Task:\r\n\r\n    1.  Determine whether §F_I != 0§ and,\r\n    2.  if so, find §x in F_I§ such that\r\n\r\n        §obj_I(x) = {(min,{obj_I(y)|y in F_I}),(max,{obj_I(y)|y in F_I}):}§\r\n\r\n# Optimization Problem: Matching\r\n\r\n1. Input: undirected graph §G = (V, E)§\r\n2. Feasible output: as set §M sube E§ such that no two edges in M have an\r\n   incident node in common. §<=>§ §M§ is called a **matching** of §G§.\r\n3. Objective: maximizing §#M§.\r\n\r\n# Feasible Solutions: Specification\r\n\r\n1. Typically the sets §F_I§ are specified by ground sets §S_I§ and side\r\n   constraints.\r\n2. **Side constraint**: a predicate on §S_I§.\r\n3. For an instance §I in ccI§, let §ccSccC_I§ denote the set of all side\r\n   constraints for §I§.\r\n4. **Feasible solution** §{x in S_I | forall c in ccSC_I : c(x) }§\r\n\r\n# Optimization Problem: TSP\r\n\r\n1. §ccI§: set of quadratic real-valued matrices §D§:\r\n\r\n    §D[i, j]§ = distance from point §i§ to point §j§.\r\n\r\n2. For an §(n x n)§-matrix §I in ccI§, §S_I§ may then be the set of all\r\n   quadratic 0/1-matrices §X§ of size §n§:\r\n\r\n    §X[i, j] = 1 <=> j§ follows §i§ immediately on the cycle corresponding to\r\n    §X§.\r\n\r\n3. Objective for matrix size n:\r\n\r\n    minimizing §sum\\_(i=1)^n sum\\_(j=1)^n D[i, j] \\* X[i, j]§\r\n\r\n# Feasibility\r\n\r\n<!-- prettier-ignore -->\r\n1. An instance §I in ccI§ of an algorithmic problem is called _feasible_, if\r\n   §F_I != 0§, otherwise _infeasible_.\r\n\r\n2) An instance §I in ccI§ of a minimization (resp. maximization) problem is\r\n   called _bounded_, if the objective function is bounded over §F_I§ from below\r\n   (resp. above), otherwise it is called unbounded.\r\n\r\n# Neighborhoods\r\n\r\n§I§: instance of an optimization problem.\r\n\r\n§F_I§ set of feasible solutions of §I§.\r\n\r\n§obj_I : F_I |-> RR§: objective function.\r\n\r\nGiven a feasible point §f in F_I§, it is useful to define a set §N_I(f)§ of\r\npoints which are **\"close\" is some sense** to the point §f§.\r\n\r\nA _neighborhood_ is a mapping §N_I : F_I |-> 2^(F_I)§.\r\n";
-
     /**
      * Copyright (c) 2014-present, Facebook, Inc.
      *
@@ -30001,6 +29999,17 @@
 
     var Container$1 = unwrapExports(Container_1);
 
+    var graphsMarkdown = "# Purpose of Dijkstra's Algorithm\n\nGiven\n\n1. a directed graph §G = (V, A)§,\n2. an arc weight §l(a)§ for each arc §a in A§,\n3. a root node §s in V§,\n\nfind the shortest path from the root node to any other node.\n\n# Dijkstra's Algorithm: Implementation\n\nGiven directed graph §(V, A)§.\n\n## Auxiliary data:\n\n1. Temporary distance value for each node. §forall v in V: delta(v) in RR§\n2. Bounded priority queue §Q§ of size §|V| - 1§, containing graph nodes and\n   their distance value as\n\n## Algorithm:\n\n1. Set distance of start node §s§ to 0: §delta(s) := 0§.\n2. Set distance of all other nodes to §infty§: §forall v in V setminus {s}:\n   delta(v) := infty§\n3. Insert all nodes into priority queue §Q§.\n4. While the queue contains a node with a key/distance value less than infinite:\n    5. Extract the minimum node §v§ from the queue.\n    6. For each node §w§ which can be reached from §v§, update that node's\n       distance if is reduced by taking that path. For each outgoing arc §a =\n       (v, w) \\in A§ such that §w \\in Q§, set §delta(w) := min {delta(w),\n       delta(v) + l(a)}§\n\n# Dijkstra's Algorithm: Prerequisite\n\nThe weight of all edges must be greater or equal to zero. Given directed graph\n§(V, A)§, §\\forall a \\in A: l(a) \\ge 0§, where §l(a)§ is the length of edge §a§.\n\n# Dijkstra's Algorithm: Complexity\n\n§n = |V|§ (number of nodes)\n\n§m = |A|§ (number of arcs)\n\n§T(n)§: Worst case complexity for extraction/insertion of nodes in §Q§.\n\nWorst case complexity: §O(T(n) \\* (n + m))§\n\n## Proof\n\nEach node is extracted and inserted in Q at most once, which gives §O(T(n) \\*\nn)§.\n\nAlso, each arc §(v, w) \\in A§ is touched at most once, when §v§ is extracted\nfrom §Q§, which gives §O(T(n) \\* m)§ for all decrease-key operations.\n\n# Dijkstra's Algorithm: Heuristics\n\n1. Do not insert nodes with distance §infty§ into the queue.\n2. Early termination variant: stop when the target node has been extracted from\n   the queue.\n3. Bidirectional search: In the single-source, single-target case: Interleave\n   two searches: one from §s§ on §G§ and one from §t§ on the inverse of §G§.\n   When one node has been extracted by both searches,\n4. When performing multiple searches on same large graph:\n\n    Use heuristics 1. and 2.\n\n    Instead of initializing the distances on every search, use a version\n    counter. If the version counter does not match the current search, assume\n    §delta(v) = infty§.\n\n# Bounded Priority Queue: Methods\n\n1. insert\n2. extract minimum\n3. find minimum\n4. decrease key\n5. number\n\n# Path: Simple\n\nA path is simple if it does not meet any node more than once.\n\n# Path: Ordinary\n\nAn ordinary path in an undirected graph is a finite ordered sequence §({v_1,\nv_2}, {v_2, v_3}, ..., {v\\_(k-2), v\\_(k-2)}, {v\\_(k-2), v\\_(k-2)})§.\n\nAn ordinary path in a directed graph is a finite ordered sequence §((v_1, v_2),\n(v_2, v_3), ..., (v\\_(k-2), v\\_(k-2)), (v\\_(k-2), v\\_(k-2)))§.\n\n# Path: Generalized\n\nAlso known as a weak path.\n\nA generalized path in a directed graph is a finite sequence §((v_1, v_2), (v_2,\nv_3), ..., (v\\_(k-2), v\\_(k-2)), (v\\_(k-2), v\\_(k-2)))§, such that turning some\n(§>= 0§) of the arcs yields an ordinary path.\n\n# Graph: Reachability\n\nA node §t in V§ is _reachable_ from §s in V§ if there is a path from §s§ to §t§\nin the graph.\n\n# Path: Internal Nodes\n\nThe internal nodes of a path are all the nodes of that path except the start and\nend nodes. If the start or end nodes appear more than once on the path, they are\nalso internal nodes.\n\n# Path: Disjointedness\n\nTwo paths are **edge-disjoint**, if they have no edge in common.\n\nTwo paths are **arc-disjoint**, if they have no arc in common.\n\nTwo paths are **(internally) node-disjoint** if they have no node in common that\nis internal on either path.\n\n# Inclusion-Minimal/Maximal\n\nLet §ccS§ (read calligraphic S) be a set of (multi)sets.\n\n1. A set §S in ccS§ is **inclusion-minimal** if no other set (in §ccS§) is a\n   subset of it. (If §not EE S' in ccS setminus S: S' sub S§)\n\n2. A set §S in ccS§ is **inclusion-maximal** if no other set (in §ccS§) is a\n   proper superset of it / if it is not a proper subset of any other set (in\n   §ccS§). (If §not EE S' in ccS setminus S: S' sup S§)\n\n<!-- Let $\\mathcal{S}$ (read calligraphic S) be a set of (multi)sets.\n\n1. A set $S\\in\\mathcal{S}$ is **inclusion-minimal** (resp.\n   **inclusion-maximal**) in $\\mathcal{S}$ if $S'\\subsetneq S$ (resp.\n   $S'\\supsetneq S$) for no $S'\\in\\mathcal{S}\\setminus\\{S\\}$.\n2. A set $S\\in\\mathcal{S}$ is **cardinality-minimal** (resp.\n   **cardinality-maximal**) in $\\mathcal{S}$ if $|S'|<|S|$ (resp. $|S'|>|S|$)\n   for no $S'\\in\\mathcal{S}\\setminus\\{S\\}$. -->\n\n# Cardinality-Minimal/Maximal\n\nLet §ccS§ (read calligraphic S) be a set of (multi)sets.\n\n1. A set §S in ccS§ is **cardinality-minimal** if it has the smallest number of\n   elements of any set (in §ccS§). (§AA S' in ccS: |S| <= |S'|§)\n2. A set §S in ccS§ is **cardinality-maximal** if it has the largest number of\n   elements of any set (in §ccS§). (§AA S' in ccS: |S| >= |S'|§)\n\n# Connectedness\n\nAn **undirected graph** is said to be **connected** if every pair of nodes is\nconnected by a path.\n\nIt is §k§-connected if every pair of nodes is connected by at least §k§\n**internally node-disjoint paths**. _Connected_ means _1-connected_.\n_2-connected_ is synonmous with _biconnected_.\n\n# Weak Connectedness\n\nA **directed graph** is said to be _weakly connected_ if every pair of nodes is\nconnected by a **generalized/weak path**.\n\n# Strong Connectedness\n\nA **directed graph** is said to be _strongly connected_ if every **ordered\npair** of nodes is connected by a an **ordinary path**.\n\n# Articulation Node\n\nAn arcticulation node in a **connected undirected graph** is a node such that\nthe graph would become disconnected if it and its incident arcs were removed.\n\n# Bridge\n\nA bridge in a **connected undirected graph** is an edge such that the graph\nwould become disconnected if it were removed.\n\n# Subgraph\n\nLet §G_1 = (V_1, E_1)§ and §G_2 = (V_2, E_2)§ be two simple undirected graphs.\n\n§G_1§ is a subgraph of §G_2§ if there is §V' sube V_2§ and bijection §varphi:V_1\n-> V'§ such that §{v, w} in E_1§ implies §{varphi(v), varphi(w)} in E_2§.\n\nIf all the edges of §G_2§ defined on §V'§ are also in §G_1§, we say §G_2§ is the\ngraph **induced** by §V'§.\n\n# Spanning subgraph\n\nA spanning subgraph of an undirected or directed graph §G§ is a subgraph which\ncontains all nodes of §G§.\n\n# Graph: Simple\n\nA directed or undirected graph is simple, if:\n\n1. No node is paired with itself in §A§/§E§.\n2. The multiset §A§/§E§ is a sete. I.e., no edge is \"double\".\n\n# Arc: Lexicographically Smaller\n\nAssuming, for each node, an arbitrary but fixed ordering of outgoing arcs, an\narc §(v,w)§ preceding and arc §(v, w')§ is lexicographically smaller than §(v,\nw')§.\n\n# Path: Lexicographically Smaller\n\nLet §p§ and §p'§ be two paths that start from the same node §v in V§. Let §w§ be\nthe last common node such that the subpaths of §p§ and §p'§ are identical. If\nthe next arc of §p§ from §w§ onwards is lexicographically smaller than the next\narc of §p'§, §p§ is **lexicographically smaller** than §p'§.\n\nThe lexicograpically smallest path from §v in V§ to §w in V§ is **well defined**\nand **unique**.\n\n# Node: Lexicographically Smaller\n\n**With respect to a starting node §s in V§**, a node §v in V§ is\nlexicographically smaller than §w in V§ if the lexicographically smallest path\nfrom §s§ to §v§ is lexicographically smaller than the lexicographically smallest\npath from §s§ to §w§.\n\n# Node/Path: Lexicographical Order\n\nA node §v in V§ is lexicographically smaller than a path §p§ if §v§ does not\nbelong to §p§ and the lexicographically smallest path from the start of §p§ to\n§v§ precedes §p§.\n\nA node §v in V§ is lexicographically larger than a path §p§ if §v§ does not\nbelong to §p§ and the **lexicographically smallest** path from the start of §p§\nto §v§ succeeds §p§.\n\n# Forest\n\nA _forest_ is a **cycle-free undirected graph**.\n\nFor a forest §G = (V, E)§ Let §n = |V|§ be the number of nodes, §m = |E|§ the\nnumber of edges, and §k§ the number of trees in the forest. Then it is §m = n -\nk§.\n\nProof?\n\n# Tree\n\nA _tree_ is a **connected forest**.\n\n# Branching\n\nA _branching_ is a **cycle-free directed** graph such that the **indegree** of\neach node is zero or one.\n\n# Arborescence\n\nAn _arborescence_ is a **branching** such that **exactly one node has indegree\nzero**.\n\nFor branchings, this condition is equivalent to weak connectedness.\n\nAlso known as a **rooted tree**, the unique node with indegree zero is the\n**root**.\n\n# Head/Tail\n\nLet §G = (V, A)§ be a directed graph.\n\nFor an arc §a = (v, w) in A§, §v§ is the _tail_ of §a§, and §w§ is the _head_ of\n§a§.\n\n# Outgoing/Incoming\n\nLet §G = (V, A)§ be a directed graph.\n\nAn arc §(v, w) in A§ is an outgoing arc of §v§ and an incoming arc of §w§.\n\n# Outdegree/Indegree\n\nLet §G = (V, A)§ be a directed graph.\n\nThe outdegree of a node §v in V§ is the number of **outgoing arcs**, the\nindegree of §v§ is the number of **incoming arcs**.\n\n# Depth-First Search: Invariant/Variant\n\nGiven:\n\n1. A stack §S§ whose elements are nodes in §V§.\n2. Each node has a **current arc** §a_v in V§, which is either void or an\n   outgoing arc §a_v = (v, w)§ of §v§. (May be viewed as an iterator over the\n   list of all outgoing arcs.)\n\n**Invariant**: Before and after each iteration:\n\n1. §S§ forms a path §p§ from the start node §s§ to some other node, that is, the\n   order of the ndoes on §p§ is the order in which they appear in §S§ (start\n   node §s§ at the bottom of §S§).\n2. For each node not yet seen, the current arc is the first arc (or void if\n   outdegree = 0).\n3. For each node §v§ on §p§:\n    1. If there are arcs §(v, w) in A§ such that w is not yet seen, the current\n       arc equals or precedes the first such arc.\n    2. The subpath of §p§ from the start node §s§ to §v§ is the\n       lexicographically first §(s, v)§-path.\n4. The nodes on §p§ are seen but not finished. Let §p + a§ denote the\n   concatenation of §p§ with the current arc §a§ of the last node of §p§. The\n   nodes that lexicographically precede §p + a§ are seen and finished, and the\n   nodes that lexicographically succeed §p + a§ are neither seen nor finished.\n   (Nothing is said about the head of §a§).\n\n**Variant**: Either one node is seen for the first time or finished, or\n(inclusive) the current arc of one node is moved forward.\n\n# Breadth-First Search\n\n§Q = \"(\" ubrace(v_1, ..., v_l)\\_k, ubrace(v\\_(l+1), ... v_n)\\_(k+1) \")\"§\n";
+
+    var optalgoMarkdown = "# Types of Algorithmic Problems\n\n1.  **Decision Problem**: is there a solution or not.\n2.  **Construction problem**: if there is a solution, construct one.\n3.  **Enumeration problem**: give all solutions.\n4.  **Optimization problem**: construct a solution that is optimal (or at least\n    nearly optimal) subject to a given objective.\n\nConstruction and optimization problems are by far the most important in\npractice.\n\nAlgorithms for decision problems are typically constructive. Construction\nproblems may be viewed as an optimization problem with all solutions having\nequal value.\n\nMany generic algorithms are applicable only to optimization problems.\n\n--> Focus on optimization problems.\n\n# Optimization Problem: Ingredients\n\n1.  Feasible inputs (a.k.a. instances). (Zulässigen Inputs/Eingaben/Instanzen)\n\n    A set §ccI§ of potential inputs.\n\n2.  Feasible outputs for a given instance.\n\n    For each §I in ccI§ a set §F_I§ of **feasible solutions**.\n\n3.  The objective.\n\n    Objective function §obj_I : F_I -> RR§ and a direction: **minimizing** or\n    **maximizing**.\n\n4.  Task:\n\n    1.  Determine whether §F_I != 0§ and,\n    2.  if so, find §x in F_I§ such that\n\n        §obj_I(x) = {(min,{obj_I(y)|y in F_I}),(max,{obj_I(y)|y in F_I}):}§\n\n# Optimization Problem: Matching\n\n1. Input: undirected graph §G = (V, E)§\n2. Feasible output: as set §M sube E§ such that no two edges in M have an\n   incident node in common. §<=>§ §M§ is called a **matching** of §G§.\n3. Objective: maximizing §#M§.\n\n# Feasible Solutions: Specification\n\n1. Typically the sets §F_I§ are specified by ground sets §S_I§ and side\n   constraints.\n2. **Side constraint**: a predicate on §S_I§.\n3. For an instance §I in ccI§, let §ccSccC_I§ denote the set of all side\n   constraints for §I§.\n4. **Feasible solution** §{x in S_I | forall c in ccSC_I : c(x) }§\n\n# Optimization Problem: TSP\n\n1. §ccI§: set of quadratic real-valued matrices §D§:\n\n    §D[i, j]§ = distance from point §i§ to point §j§.\n\n2. For an §(n x n)§-matrix §I in ccI§, §S_I§ may then be the set of all\n   quadratic 0/1-matrices §X§ of size §n§:\n\n    §X[i, j] = 1 <=> j§ follows §i§ immediately on the cycle corresponding to\n    §X§.\n\n3. Objective for matrix size n:\n\n    minimizing §sum\\_(i=1)^n sum\\_(j=1)^n D[i, j] \\* X[i, j]§\n\n# Feasibility\n\n<!-- prettier-ignore -->\n1. An instance §I in ccI§ of an algorithmic problem is called _feasible_, if\n   §F_I != 0§, otherwise _infeasible_.\n\n2) An instance §I in ccI§ of a minimization (resp. maximization) problem is\n   called _bounded_, if the objective function is bounded over §F_I§ from below\n   (resp. above), otherwise it is called unbounded.\n\n# Neighborhoods\n\n§I§: instance of an optimization problem.\n\n§F_I§ set of feasible solutions of §I§.\n\n§obj_I : F_I |-> RR§: objective function.\n\nGiven a feasible point §f in F_I§, it is useful to define a set §N_I(f)§ of\npoints which are **\"close\" is some sense** to the point §f§.\n\nA _neighborhood_ is a mapping §N_I : F_I |-> 2^(F_I)§.\n\n# Neighborhood: Exact\n\nAn optimization problem neighborhood is _exact_ **iff. every local minimum is also a global minimum**.";
+
+    var robMarkdown = "# Denavit-Hartenberg Reference Frame Layout\n\n1. §z§ axis in rotation or linear axis.\n2. §x§-axis is perpendicular to both §z\\_(i-1)§ and §z_i§.\n\n§d_i§: distance to new origin along §z\\_(i-1)§ axis.\n\n§theta_i§: angle about §z\\_(i-1)§ to align §x\\_(i-1)§ with §x_i§.\n\n§a_i§ is the distance along the rotated §x_i§ axis.\n\n§alpha_i§ rotates about new §x_i§ axist a to align §z\\_(i-1)§ with §z_1§.\n";
+
+    var cardMarkdowns = {
+        graphs: graphsMarkdown,
+        optalgo: optalgoMarkdown,
+        rob: robMarkdown,
+    };
     var converter = new showdown.Converter({ literalMidWordUnderscores: true });
     var gs = new Gists(localStorage.getItem("learn_gisthub_token"));
     var saveGist;
@@ -30013,30 +30022,31 @@
     }
     function initSaving() {
         return __awaiter(this, void 0, void 0, function () {
-            var gists, saveGist2;
+            var gists, saveGistInfo;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, gs.all()];
                     case 1:
                         gists = _a.sent();
-                        saveGist2 = gists.find(function (gist) { return gist.description === "learn saves"; });
-                        if (!!saveGist2) return [3 /*break*/, 3];
+                        saveGistInfo = gists.find(function (gist) { return gist.description === "learn saves"; });
+                        if (!!saveGistInfo) return [3 /*break*/, 3];
                         console.log("Creating new gist");
                         return [4 /*yield*/, gs.createGist({ graphs: { content: "{}" } }, "learn saves", false)];
                     case 2:
                         saveGist = _a.sent();
                         return [3 /*break*/, 5];
                     case 3:
-                        console.log("Found existing matching gist " + saveGist2.id);
-                        return [4 /*yield*/, gs.getGist(saveGist2.id)];
+                        console.log("Found existing matching gist " + saveGistInfo.id);
+                        return [4 /*yield*/, gs.getGist(saveGistInfo.id)];
                     case 4:
                         saveGist = _a.sent();
                         _a.label = 5;
-                    case 5: return [2 /*return*/, JSON.parse(saveGist.files.graphs.content)];
+                    case 5: return [2 /*return*/, saveGist];
                 }
             });
         });
     }
+    var saveGistPromise = initSaving();
     function b64EncodeUnicode(str) {
         // first we use encodeURIComponent to get percent-encoded UTF-8,
         // then we convert the percent encodings into raw bytes which
@@ -30054,23 +30064,23 @@
         })
             .join(""));
     }
-    var path = "content/optalgo.md";
-    var contentURL = "https://api.github.com/repos/" +
-        "NaridaL" +
-        "/" +
-        "learn" +
-        "/contents/" +
-        encodeURI(path) +
-        "?" +
-        querystring.stringify({ access_token: gs.token, ref: "master" });
-    function updateCard(card, newText) {
+    function updateCard(subject, card, newText) {
+        var path = "content/" + subject + ".md";
+        var contentURL = "https://api.github.com/repos/" +
+            "NaridaL" +
+            "/" +
+            "learn" +
+            "/contents/" +
+            encodeURI(path) +
+            "?" +
+            querystring.stringify({ access_token: gs.token, ref: "master" });
         return fetch(contentURL, {
             cache: "no-store",
         })
             .then(function (r) { return r.json(); })
             .then(function (_a) {
             var sha = _a.sha, content = _a.content;
-            cards = parseCards(b64DecodeUnicode(content)).map(function (c) {
+            var newCards = parseCards(b64DecodeUnicode(content)).map(function (c) {
                 return c.slug == card.slug
                     ? {
                         title: card.title,
@@ -30079,7 +30089,7 @@
                     }
                     : c;
             });
-            var newContentContent = cards
+            var newContentContent = newCards
                 .map(function (c) {
                 return "# " +
                     c.title.trim() +
@@ -30089,25 +30099,28 @@
             })
                 .join("\n");
             console.log("new content" + newContentContent);
-            return fetch(contentURL + "?", {
-                method: "PUT",
-                body: JSON.stringify({
-                    message: "update card " + card.title,
-                    content: b64EncodeUnicode(newContentContent),
-                    sha: sha,
+            return Promise.all([
+                fetch(contentURL + "?", {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        message: "update card " + card.title,
+                        content: b64EncodeUnicode(newContentContent),
+                        sha: sha,
+                    }),
                 }),
-            });
+            ]);
         })
-            .then(function (r) { return r.json(); });
+            .then(function (_a) {
+            var newCards = _a[0], r = _a[1];
+            return newCards;
+        });
     }
-    function loadContentFromGitHub() {
-        return fetch("content/optalgo.md", {
+    function getCardsFromGitHub(subject) {
+        return fetch("content/" + subject + ".md", {
             cache: "no-store",
         })
             .then(function (r) { return r.text(); })
-            .then(function (content) {
-            cards = parseCards(b64DecodeUnicode(content));
-        });
+            .then(function (content) { return parseCards(content); });
     }
     var Card$1 = /** @class */ (function () {
         function Card$$1(title, slug, content) {
@@ -30117,9 +30130,9 @@
         }
         return Card$$1;
     }());
-    function parseCards(contentMarkdown$$1) {
+    function parseCards(contentMarkdown) {
         var cardRegex = /^#(.*)$\s*(?:^slug:(.*)$)?([\s\S]*)/m;
-        var cardTexts = contentMarkdown$$1
+        var cardTexts = contentMarkdown
             .split(/^(?=#[^#])/gm)
             .map(function (x) { return x.trim(); })
             .filter(function (x) { return x !== ""; });
@@ -30128,16 +30141,14 @@
             return new Card$1(title.trim(), slug ? slug.trim() : slugify(title), content.trim());
         });
     }
-    var cards = parseCards(contentMarkdown);
-    loadContentFromGitHub();
-    console.log(cards);
-    var AppState = /** @class */ (function () {
-        function AppState() {
+    var SubjectState = /** @class */ (function () {
+        function SubjectState() {
+            this.cards = [];
             this.cardStates = {};
             this.queue = [];
             this.viewFront = true;
         }
-        return AppState;
+        return SubjectState;
     }());
     function reviveJSONSave(json) {
         console.log(json);
@@ -30181,14 +30192,24 @@
             }
         });
     }
-    var App = /** @class */ (function (_super) {
-        __extends(App, _super);
-        function App(props) {
+    function SubjectOverview(props) {
+        return (React__default.createElement("ul", null, Object.keys(cardMarkdowns).map(function (subject) { return (React__default.createElement("li", null,
+            React__default.createElement(Link, { to: "/" + subject }, subject))); })));
+    }
+    function App() {
+        return (React__default.createElement(Container$1, { style: { height: "100%" } },
+            React__default.createElement(Route, { exact: true, path: "/", component: SubjectOverview }),
+            React__default.createElement(Route, { path: "/:subject", component: Subject })));
+    }
+    var Subject = /** @class */ (function (_super) {
+        __extends(Subject, _super);
+        function Subject(props) {
             var _this = _super.call(this, props) || this;
-            _this.state = new AppState();
+            _this.state = new SubjectState();
             _this.answer = function (correct, card, match) {
                 var _a;
                 console.log("answering");
+                var subject = _this.props.match.params.subject;
                 var currentCardState = getCardState(_this.state.cardStates, card.slug);
                 var newLevel = correct ? currentCardState.level + 1 : 1;
                 var newCorrect = correct
@@ -30204,7 +30225,7 @@
                 _this.saveLevels(newCardStates);
                 _this.setState({
                     cardStates: newCardStates,
-                    redirect: "/learn/" + match.params.level,
+                    redirect: "/" + subject + "/learn/" + match.params.level,
                 });
             };
             _this.saveLevels = function (newLevels) {
@@ -30229,38 +30250,57 @@
                     console.error(err);
                 });
             };
-            if (localStorage.getItem("save_graphs")) {
-                _this.setState({
-                    cardStates: reviveJSONSave(JSON.parse(localStorage.getItem("save_graphs"))),
-                });
-            }
+            _this.updateCards();
+            return _this;
+        }
+        Subject.prototype.updateCards = function () {
+            var _this = this;
+            var subject = this.props.match.params.subject;
+            this.setState({
+                cards: parseCards(cardMarkdowns[subject]),
+                cardStates: localStorage.getItem("save_graphs")
+                    ? reviveJSONSave(JSON.parse(localStorage.getItem("save_graphs")))
+                    : {},
+            });
+            getCardsFromGitHub(subject).then(function (cards) { return _this.setState({ cards: cards }); });
             if (localStorage.getItem("learn_gisthub_token")) {
-                initSaving()
-                    .then(function (levels) {
+                saveGistPromise
+                    .then(function (gist) {
                     console.log("loaded levels from gist");
                     _this.setState(function (_a) {
                         var cardStates = _a.cardStates;
-                        mergeSaves(cardStates, reviveJSONSave(levels));
+                        mergeSaves(cardStates, reviveJSONSave(gist.files[subject]
+                            ? JSON.parse(gist.files[subject].content)
+                            : {}));
                         console.log(cardStates);
                         return { cardStates: cardStates };
                     });
                 })["catch"](console.error);
             }
-            return _this;
-        }
-        App.prototype.render = function () {
+        };
+        Subject.prototype.componentDidUpdate = function (prevProps) {
+            // Typical usage (don't forget to compare props):
+            if (this.props.match.params.subject !== prevProps.match.params.subject) {
+                this.updateCards();
+            }
+            console.log("Running mathjax");
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, ReactDOM.findDOMNode(this)]);
+        };
+        Subject.prototype.render = function () {
             var _this = this;
             if (this.state.redirect) {
                 var result$$1 = React__default.createElement(Redirect, { push: true, to: this.state.redirect });
                 this.state.redirect = undefined;
                 return result$$1;
             }
-            return (React__default.createElement(Container$1, { style: { height: "100%" } },
-                React__default.createElement(Route, { path: "/card/:cardslug", render: function (match) { return [
-                        React__default.createElement(Link, { to: "/" }, "Back to Overview"),
-                        React__default.createElement(CardCard, { card: cards.find(function (c) { return c.slug == match.match.params.cardslug; }) }),
+            var subject = this.props.match.params.subject;
+            var cards = this.state.cards;
+            return (React__default.createElement(React__default.Fragment, null,
+                React__default.createElement(Route, { path: "/:subject/card/:cardslug", render: function (match) { return [
+                        React__default.createElement(BackToOverview, { subject: subject }),
+                        React__default.createElement(CardCard, { subject: subject, card: cards.find(function (c) { return c.slug == match.match.params.cardslug; }) }),
                     ]; } }),
-                React__default.createElement(Route, { exact: true, path: "/learn/:level", render: function (_a) {
+                React__default.createElement(Route, { exact: true, path: "/:subject/learn/:level", render: function (_a) {
                         var match = _a.match;
                         console.log(cards.filter(function (c) {
                             return getCardState(_this.state.cardStates, c.slug)
@@ -30273,55 +30313,59 @@
                         if (0 == levelCards.length) {
                             _this.state.info =
                                 "No more cards in level " + match.params.level;
-                            return React__default.createElement(Redirect, { to: "/" });
+                            return React__default.createElement(Redirect, { to: "/" + subject });
                         }
                         var testCard = lodash.sample(levelCards);
-                        return (React__default.createElement(CardQuestion, { card: testCard, onContinue: function () {
+                        return (React__default.createElement(CardQuestion, { card: testCard, subject: subject, onContinue: function () {
                                 return _this.setState({
-                                    redirect: "/learn/" +
+                                    redirect: "/" +
+                                        subject +
+                                        "/learn/" +
                                         match.params.level +
                                         "/answer/" +
                                         testCard.slug,
                                 });
                             } }));
                     } }),
-                React__default.createElement(Route, { exact: true, path: "/learn/:level/answer/:cardslug", render: function (_a) {
+                React__default.createElement(Route, { exact: true, path: "/:subject/learn/:level/answer/:cardslug", render: function (_a) {
                         var match = _a.match;
                         var card = cards.find(function (c) { return c.slug == match.params.cardslug; });
-                        return (React__default.createElement(CardAnswer, { card: card, answer: function (correct) {
+                        return (React__default.createElement(CardAnswer, { card: card, subject: subject, answer: function (correct) {
                                 return _this.answer(correct, card, match);
                             } }));
                     } }),
-                React__default.createElement(Route, { exact: true, path: "/", render: function (match) {
-                        var result$$1 = (React__default.createElement(CardOverview, { cards: cards, cardStates: _this.state.cardStates, info: _this.state.info, error: _this.state.error }));
+                React__default.createElement(Route, { exact: true, path: "/:subject/", render: function (match) {
+                        var result$$1 = (React__default.createElement(CardOverview, { cards: cards, subject: subject, cardStates: _this.state.cardStates, info: _this.state.info, error: _this.state.error }));
                         _this.state.info = undefined;
                         return result$$1;
                     } }),
-                React__default.createElement(Route, { exact: true, path: "/edit/:cardslug", component: EditCard })));
+                React__default.createElement(Route, { exact: true, path: "/:subject/edit/:cardslug", component: EditCard }),
+                React__default.createElement(Route, { path: "*", render: function (match) { return JSON.stringify(match); } })));
         };
-        App.prototype.componentDidUpdate = function () {
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub, ReactDOM.findDOMNode(this)]);
-        };
-        return App;
+        return Subject;
     }(React.Component));
     function CardCard(props) {
-        var card = props.card, style = props.style, htmlAttributes = __rest(props, ["card", "style"]);
+        var card = props.card, style = props.style, subject = props.subject, htmlAttributes = __rest(props, ["card", "style", "subject"]);
+        if (!card) {
+            return React__default.createElement("div", null, "card undefined");
+        }
+        console.log("rederning cardcard");
         return (React__default.createElement("div", __assign({}, htmlAttributes, { style: __assign({}, style, { padding: "4px" }) }),
             React__default.createElement("h3", { style: { textAlign: "center" } }, card.title),
-            React__default.createElement(Link, { to: "/edit/" + card.slug }, "Edit"),
+            React__default.createElement(Link, { to: "/" + subject + "/edit/" + card.slug }, "Edit"),
             React__default.createElement("div", { dangerouslySetInnerHTML: {
                     __html: converter.makeHtml(card.content),
                 } })));
     }
     function CardAnswer(_a) {
-        var card = _a.card, answer = _a.answer;
+        var card = _a.card, answer = _a.answer, subject = _a.subject;
         return (React__default.createElement("div", { style: {
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
             } },
-            React__default.createElement(BackToOverview, null),
-            React__default.createElement(CardCard, { card: card, style: { flexGrow: 1 } }),
+            React__default.createElement(BackToOverview, { subject: subject }),
+            React__default.createElement(CardCard, { subject: subject, card: card, style: { flexGrow: 1 } }),
             React__default.createElement("div", null,
                 React__default.createElement(Button, { style: { width: "50%" }, color: "success", onClick: function () { return answer(true); } }, "Correct"),
                 React__default.createElement(Button, { style: { width: "50%" }, color: "warning", onClick: function () { return answer(false); } }, "Incorrect"))));
@@ -30364,7 +30408,7 @@
                     switch (_a.label) {
                         case 0:
                             this.setState({ saving: true });
-                            return [4 /*yield*/, updateCard(this.getCard(), this.state.currentContent)];
+                            return [4 /*yield*/, updateCard(this.props.match.params.subject, this.getCard(), this.state.currentContent)];
                         case 1:
                             _a.sent();
                             this.setState({ saving: false });
@@ -30377,7 +30421,7 @@
         }
         EditCard.prototype.getCard = function () {
             var _this = this;
-            return cards.find(function (c) { return c.slug == _this.props.match.params.cardslug; });
+            return this.props.cards.find(function (c) { return c.slug == _this.props.match.params.cardslug; });
         };
         EditCard.prototype.getDerivedStateFromProps = function (nextProps) {
             console.log("getDerivedStateFromProps", this.props, nextProps);
@@ -30389,12 +30433,13 @@
         EditCard.prototype.render = function () {
             var _this = this;
             console.log(this.getCard().content != this.state.currentContent, this.getCard().content, this.state.currentContent);
+            var subject = this.props.match.params.subject;
             return (React__default.createElement("div", { style: {
                     display: "flex",
                     flexDirection: "column",
                     height: "100%",
                 } },
-                React__default.createElement(BackToOverview, null),
+                React__default.createElement(BackToOverview, { subject: subject }),
                 React__default.createElement("h1", { style: {
                         margin: "auto 8px",
                         textAlign: "center",
@@ -30416,23 +30461,24 @@
         return EditCard;
     }(React.Component));
     function CardQuestion(_a) {
-        var card = _a.card, onContinue = _a.onContinue;
+        var card = _a.card, onContinue = _a.onContinue, subject = _a.subject;
         return (React__default.createElement("div", { onClick: onContinue, style: {
                 flexGrow: 1,
                 display: "flex",
                 justifyContent: "center",
             } },
-            React__default.createElement(BackToOverview, null),
+            React__default.createElement(BackToOverview, { subject: subject }),
             React__default.createElement("h1", { style: {
                     margin: "auto 8px",
                     textAlign: "center",
                 } }, card.title)));
     }
-    function BackToOverview(props) {
-        return React__default.createElement(Link, { to: "/" }, "Zur\u00FCck zur \u00DCbersicht");
+    function BackToOverview(_a) {
+        var subject = _a.subject;
+        return React__default.createElement(Link, { to: "/" + subject }, "Zur\u00FCck zur \u00DCbersicht");
     }
     function CardOverview(_a) {
-        var cards = _a.cards, info = _a.info, error = _a.error, cardStates = _a.cardStates;
+        var cards = _a.cards, info = _a.info, error = _a.error, cardStates = _a.cardStates, subject = _a.subject;
         return (React__default.createElement(React__default.Fragment, null,
             info && React__default.createElement(Alert, { color: "info" }, info),
             error && React__default.createElement(Alert, { color: "error" }, error),
@@ -30442,7 +30488,7 @@
                     level,
                     " -",
                     " ",
-                    React__default.createElement(Link, { to: "/learn/" + level }, "learn")),
+                    React__default.createElement(Link, { to: "/" + subject + "/learn/" + level }, "learn")),
                 React__default.createElement("ul", null, cards
                     .filter(function (c) {
                     return getCardState(cardStates, c.slug).level ==
@@ -30453,7 +30499,10 @@
                     var correctCount = cardState.correct.length;
                     var totalCount = correctCount + cardState.incorrect.length;
                     return (React__default.createElement("li", { key: card.slug },
-                        React__default.createElement(Link, { to: "/card/" + card.slug }, card.title),
+                        React__default.createElement(Link, { to: "/" +
+                                subject +
+                                "/card/" +
+                                card.slug }, card.title),
                         " - ",
                         React__default.createElement("span", { style: { color: "lightgrey" } },
                             correctCount,
@@ -30476,7 +30525,6 @@
         if (deleteCount === void 0) { deleteCount = 0; }
         return str.substring(0, index) + what + str.substring(index + deleteCount);
     }
-    //# sourceMappingURL=App.js.map
 
     ReactDOM.render(React__default.createElement(BrowserRouter, { basename: "/learn/" },
         React__default.createElement(App, null)), document.getElementById("vcs-root"));

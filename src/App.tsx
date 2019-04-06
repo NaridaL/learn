@@ -16,7 +16,6 @@ import _ from "lodash-es"
 import { Gists, GistDescriptor } from "./gists"
 
 import ReactDOM from "react-dom"
-import contentMarkdown from "../content/optalgo.md"
 import {
 	Link,
 	Switch,
@@ -26,6 +25,16 @@ import {
 } from "react-router-dom"
 import Container from "reactstrap/lib/Container"
 import FormGroup from "reactstrap/lib/FormGroup"
+
+import graphsMarkdown from "../content/graphs.md"
+import optalgoMarkdown from "../content/optalgo.md"
+import robMarkdown from "../content/rob.md"
+
+const cardMarkdowns = {
+	graphs: graphsMarkdown,
+	optalgo: optalgoMarkdown,
+	rob: robMarkdown,
+}
 
 const converter = new Converter({ literalMidWordUnderscores: true })
 type CardStates = { [slug: string]: CardState }
@@ -41,12 +50,10 @@ function getCardState(states: CardStates, slug: string) {
 	)
 }
 
-async function initSaving(): Promise<{
-	[x: string]: { incorrect: string[]; correct: string[] }
-}> {
+async function initSaving(): Promise<GistDescriptor> {
 	const gists = await gs.all()
-	let saveGist2 = gists.find(gist => gist.description === "learn saves")
-	if (!saveGist2) {
+	const saveGistInfo = gists.find(gist => gist.description === "learn saves")
+	if (!saveGistInfo) {
 		console.log("Creating new gist")
 
 		saveGist = await gs.createGist(
@@ -55,12 +62,13 @@ async function initSaving(): Promise<{
 			false,
 		)
 	} else {
-		console.log("Found existing matching gist " + saveGist2.id)
+		console.log("Found existing matching gist " + saveGistInfo.id)
 
-		saveGist = await gs.getGist(saveGist2.id)
+		saveGist = await gs.getGist(saveGistInfo.id)
 	}
-	return JSON.parse(saveGist.files.graphs.content)
+	return saveGist
 }
+const saveGistPromise = initSaving()
 
 interface GitHubFile {
 	type: "file"
@@ -106,23 +114,23 @@ function b64DecodeUnicode(str) {
 	)
 }
 
-const path = "content/optalgo.md"
-const contentURL =
-	"https://api.github.com/repos/" +
-	"NaridaL" +
-	"/" +
-	"learn" +
-	"/contents/" +
-	encodeURI(path) +
-	"?" +
-	querystring.stringify({ access_token: gs.token, ref: "master" })
-function updateCard(card: Card, newText: string) {
+function updateCard(subject: string, card: Card, newText: string) {
+	const path = "content/" + subject + ".md"
+	const contentURL =
+		"https://api.github.com/repos/" +
+		"NaridaL" +
+		"/" +
+		"learn" +
+		"/contents/" +
+		encodeURI(path) +
+		"?" +
+		querystring.stringify({ access_token: gs.token, ref: "master" })
 	return fetch(contentURL, {
 		cache: "no-store",
 	})
 		.then(r => r.json() as Promise<GitHubFile>)
 		.then(({ sha, content }) => {
-			cards = parseCards(b64DecodeUnicode(content)).map(
+			const newCards = parseCards(b64DecodeUnicode(content)).map(
 				c =>
 					c.slug == card.slug
 						? {
@@ -132,7 +140,7 @@ function updateCard(card: Card, newText: string) {
 						  }
 						: c,
 			)
-			const newContentContent = cards
+			const newContentContent = newCards
 				.map(
 					c =>
 						"# " +
@@ -143,25 +151,25 @@ function updateCard(card: Card, newText: string) {
 				)
 				.join("\n")
 			console.log("new content" + newContentContent)
-			return fetch(contentURL + "?", {
-				method: "PUT",
-				body: JSON.stringify({
-					message: "update card " + card.title,
-					content: b64EncodeUnicode(newContentContent),
-					sha,
+			return Promise.all([
+				fetch(contentURL + "?", {
+					method: "PUT",
+					body: JSON.stringify({
+						message: "update card " + card.title,
+						content: b64EncodeUnicode(newContentContent),
+						sha,
+					}),
 				}),
-			})
+			])
 		})
-		.then(r => r.json())
+		.then(([newCards, r]) => newCards)
 }
-function loadContentFromGitHub() {
-	return fetch("content/optalgo.md", {
+function getCardsFromGitHub(subject: string) {
+	return fetch("content/" + subject + ".md", {
 		cache: "no-store",
 	})
 		.then(r => r.text())
-		.then(content => {
-			cards = parseCards(b64DecodeUnicode(content))
-		})
+		.then(content => parseCards(content))
 }
 
 class Card {
@@ -187,16 +195,13 @@ function parseCards(contentMarkdown: string): Card[] {
 		)
 	})
 }
-let cards: Card[] = parseCards(contentMarkdown)
-loadContentFromGitHub()
-
-console.log(cards)
 interface CardState {
 	level: int
 	correct: Date[]
 	incorrect: Date[]
 }
-class AppState {
+class SubjectState {
+	cards: Card[] = []
 	cardStates: CardStates = {}
 	queue: Card[] = []
 	viewFront = true
@@ -248,31 +253,78 @@ function mergeSaves(a: CardStates, b: CardStates) {
 		}
 	})
 }
-export class App extends Component<{}, AppState> {
-	public state = new AppState()
 
-	constructor(props: {}) {
+export function SubjectOverview(props: RouteComponentProps) {
+	return (
+		<ul>
+			{Object.keys(cardMarkdowns).map(subject => (
+				<li>
+					<Link to={"/" + subject}>{subject}</Link>
+				</li>
+			))}
+		</ul>
+	)
+}
+export function App() {
+	return (
+		<Container style={{ height: "100%" }}>
+			<Route exact path="/" component={SubjectOverview} />
+			<Route path="/:subject" component={Subject} />
+		</Container>
+	)
+}
+
+export class Subject extends Component<
+	RouteComponentProps<{ subject: string }>,
+	SubjectState
+> {
+	public state = new SubjectState()
+
+	constructor(props: RouteComponentProps<{ subject: string }>) {
 		super(props)
+		this.updateCards()
+	}
 
-		if (localStorage.getItem("save_graphs")) {
-			this.setState({
-				cardStates: reviveJSONSave(
-					JSON.parse(localStorage.getItem("save_graphs")),
-				),
-			})
-		}
+	updateCards() {
+		const subject = this.props.match.params.subject
+		this.setState({
+			cards: parseCards(cardMarkdowns[subject]),
+			cardStates: localStorage.getItem("save_graphs")
+				? reviveJSONSave(
+						JSON.parse(localStorage.getItem("save_graphs")),
+				  )
+				: {},
+		})
+		getCardsFromGitHub(subject).then(cards => this.setState({ cards }))
 		if (localStorage.getItem("learn_gisthub_token")) {
-			initSaving()
-				.then(levels => {
+			saveGistPromise
+				.then(gist => {
 					console.log("loaded levels from gist")
 					this.setState(({ cardStates }) => {
-						mergeSaves(cardStates, reviveJSONSave(levels))
+						mergeSaves(
+							cardStates,
+							reviveJSONSave(
+								gist.files[subject]
+									? JSON.parse(gist.files[subject].content)
+									: {},
+							),
+						)
 						console.log(cardStates)
 						return { cardStates }
 					})
 				})
 				.catch(console.error)
 		}
+	}
+	componentDidUpdate(prevProps) {
+		// Typical usage (don't forget to compare props):
+		if (
+			this.props.match.params.subject !== prevProps.match.params.subject
+		) {
+			this.updateCards()
+		}
+		console.log("Running mathjax")
+		MathJax.Hub.Queue(["Typeset", MathJax.Hub, ReactDOM.findDOMNode(this)])
 	}
 
 	public render() {
@@ -281,13 +333,16 @@ export class App extends Component<{}, AppState> {
 			this.state.redirect = undefined
 			return result
 		}
+		const subject = this.props.match.params.subject
+		const { cards } = this.state
 		return (
-			<Container style={{ height: "100%" }}>
+			<>
 				<Route
-					path="/card/:cardslug"
+					path="/:subject/card/:cardslug"
 					render={match => [
-						<Link to="/">Back to Overview</Link>,
+						<BackToOverview subject={subject} />,
 						<CardCard
+							subject={subject}
 							card={cards.find(
 								c => c.slug == match.match.params.cardslug,
 							)}
@@ -296,7 +351,7 @@ export class App extends Component<{}, AppState> {
 				/>
 				<Route
 					exact
-					path="/learn/:level"
+					path="/:subject/learn/:level"
 					render={({ match }) => {
 						console.log(
 							cards.filter(
@@ -313,15 +368,18 @@ export class App extends Component<{}, AppState> {
 						if (0 == levelCards.length) {
 							this.state.info =
 								"No more cards in level " + match.params.level
-							return <Redirect to="/" />
+							return <Redirect to={"/" + subject} />
 						}
 						const testCard = _.sample(levelCards)
 						return (
 							<CardQuestion
 								card={testCard}
+								subject={subject}
 								onContinue={() =>
 									this.setState({
 										redirect:
+											"/" +
+											subject +
 											"/learn/" +
 											match.params.level +
 											"/answer/" +
@@ -334,7 +392,7 @@ export class App extends Component<{}, AppState> {
 				/>
 				<Route
 					exact
-					path="/learn/:level/answer/:cardslug"
+					path="/:subject/learn/:level/answer/:cardslug"
 					render={({ match }) => {
 						const card = cards.find(
 							c => c.slug == match.params.cardslug,
@@ -342,6 +400,7 @@ export class App extends Component<{}, AppState> {
 						return (
 							<CardAnswer
 								card={card}
+								subject={subject}
 								answer={correct =>
 									this.answer(correct, card, match)
 								}
@@ -351,11 +410,12 @@ export class App extends Component<{}, AppState> {
 				/>
 				<Route
 					exact
-					path="/"
+					path="/:subject/"
 					render={match => {
 						const result = (
 							<CardOverview
 								cards={cards}
+								subject={subject}
 								cardStates={this.state.cardStates}
 								info={this.state.info}
 								error={this.state.error}
@@ -365,13 +425,19 @@ export class App extends Component<{}, AppState> {
 						return result
 					}}
 				/>
-				<Route exact path="/edit/:cardslug" component={EditCard} />
-			</Container>
+				<Route
+					exact
+					path="/:subject/edit/:cardslug"
+					component={EditCard}
+				/>
+				<Route path="*" render={match => JSON.stringify(match)} />
+			</>
 		)
 	}
 
 	answer = (correct: boolean, card: Card, match: any) => {
 		console.log("answering")
+		const subject = this.props.match.params.subject
 		const currentCardState = getCardState(this.state.cardStates, card.slug)
 		const newLevel = correct ? currentCardState.level + 1 : 1
 		const newCorrect = correct
@@ -391,7 +457,7 @@ export class App extends Component<{}, AppState> {
 		this.saveLevels(newCardStates)
 		this.setState({
 			cardStates: newCardStates,
-			redirect: "/learn/" + match.params.level,
+			redirect: "/" + subject + "/learn/" + match.params.level,
 		})
 	}
 	saverController: AbortController
@@ -425,20 +491,20 @@ export class App extends Component<{}, AppState> {
 				console.error(err)
 			})
 	}
-
-	componentDidUpdate() {
-		MathJax.Hub.Queue(["Typeset", MathJax.Hub, ReactDOM.findDOMNode(this)])
-	}
 }
 
 export function CardCard(
-	props: { card: Card } & HTMLAttributes<HTMLDivElement>,
+	props: { card: Card; subject: string } & HTMLAttributes<HTMLDivElement>,
 ) {
-	const { card, style, ...htmlAttributes } = props
+	const { card, style, subject, ...htmlAttributes } = props
+	if (!card) {
+		return <div>card undefined</div>
+	}
+	console.log("rederning cardcard")
 	return (
 		<div {...htmlAttributes} style={{ ...style, padding: "4px" }}>
 			<h3 style={{ textAlign: "center" }}>{card.title}</h3>
-			<Link to={"/edit/" + card.slug}>Edit</Link>
+			<Link to={"/" + subject + "/edit/" + card.slug}>Edit</Link>
 			<div
 				dangerouslySetInnerHTML={{
 					__html: converter.makeHtml(card.content),
@@ -451,7 +517,9 @@ export function CardCard(
 export function CardAnswer({
 	card,
 	answer,
+	subject,
 }: {
+	subject: string
 	card: Card
 	answer: (x: boolean) => void
 }) {
@@ -463,8 +531,8 @@ export function CardAnswer({
 				height: "100%",
 			}}
 		>
-			<BackToOverview />
-			<CardCard card={card} style={{ flexGrow: 1 }} />
+			<BackToOverview subject={subject} />
+			<CardCard subject={subject} card={card} style={{ flexGrow: 1 }} />
 			<div>
 				<Button
 					style={{ width: "50%" }}
@@ -489,17 +557,22 @@ class EditCardState {
 	saving = false
 	constructor(public currentContent: string) {}
 }
-export class EditCard extends Component<
-	RouteComponentProps<{ cardslug: string }>,
-	EditCardState
-> {
+type EditCardProps = RouteComponentProps<{
+	cardslug: string
+	subject: string
+}> & {
+	cards: Card[]
+}
+export class EditCard extends Component<EditCardProps, EditCardState> {
 	textarea: HTMLTextAreaElement
-	constructor(props: RouteComponentProps<{ cardslug: string }>) {
+	constructor(props: EditCardProps) {
 		super(props)
 		this.state = new EditCardState(this.getCard().content)
 	}
 	getCard() {
-		return cards.find(c => c.slug == this.props.match.params.cardslug)
+		return this.props.cards.find(
+			c => c.slug == this.props.match.params.cardslug,
+		)
 	}
 	getDerivedStateFromProps(
 		nextProps: RouteComponentProps<{ cardslug: string }>,
@@ -518,6 +591,7 @@ export class EditCard extends Component<
 			this.getCard().content,
 			this.state.currentContent,
 		)
+		const subject = this.props.match.params.subject
 		return (
 			<div
 				style={{
@@ -526,7 +600,7 @@ export class EditCard extends Component<
 					height: "100%",
 				}}
 			>
-				<BackToOverview />
+				<BackToOverview subject={subject} />
 				<h1
 					style={{
 						margin: "auto 8px",
@@ -619,7 +693,11 @@ export class EditCard extends Component<
 	}
 	save = async () => {
 		this.setState({ saving: true })
-		await updateCard(this.getCard(), this.state.currentContent)
+		await updateCard(
+			this.props.match.params.subject,
+			this.getCard(),
+			this.state.currentContent,
+		)
 		this.setState({ saving: false })
 	}
 }
@@ -627,8 +705,10 @@ export class EditCard extends Component<
 export function CardQuestion({
 	card,
 	onContinue,
+	subject,
 }: {
 	card: Card
+	subject: string
 	onContinue: () => void
 }) {
 	return (
@@ -640,7 +720,7 @@ export function CardQuestion({
 				justifyContent: "center",
 			}}
 		>
-			<BackToOverview />
+			<BackToOverview subject={subject} />
 			<h1
 				style={{
 					margin: "auto 8px",
@@ -653,8 +733,8 @@ export function CardQuestion({
 	)
 }
 
-export function BackToOverview(props) {
-	return <Link to="/">Zurück zur Übersicht</Link>
+export function BackToOverview({ subject }: { subject: string }) {
+	return <Link to={"/" + subject}>Zurück zur Übersicht</Link>
 }
 
 export function CardOverview({
@@ -662,7 +742,9 @@ export function CardOverview({
 	info,
 	error,
 	cardStates,
+	subject,
 }: {
+	subject: string
 	cards: Card[]
 	info?: string
 	error?: string
@@ -676,7 +758,9 @@ export function CardOverview({
 				<React.Fragment key={"level" + level}>
 					<h3>
 						Level {level} -{" "}
-						<Link to={"/learn/" + level}>learn</Link>
+						<Link to={"/" + subject + "/learn/" + level}>
+							learn
+						</Link>
 					</h3>
 					<ul>
 						{cards
@@ -695,7 +779,14 @@ export function CardOverview({
 									correctCount + cardState.incorrect.length
 								return (
 									<li key={card.slug}>
-										<Link to={"/card/" + card.slug}>
+										<Link
+											to={
+												"/" +
+												subject +
+												"/card/" +
+												card.slug
+											}
+										>
 											{card.title}
 										</Link>
 										{" - "}
