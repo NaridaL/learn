@@ -1,1 +1,3 @@
 * text=auto eol=lf
+/bundle.* linguist-vendored
+/index.html linguist-vendored
