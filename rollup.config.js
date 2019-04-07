@@ -47,6 +47,7 @@ export default {
 		globals: {
 			react: "React",
 			"react-dom": "ReactDOM",
+			reactstrap: "Reactstrap",
 			showdown: "showdown",
 		},
 		// globals: moduleName => {
@@ -55,7 +56,13 @@ export default {
 		// 	return x
 		// },
 	},
-	external: ["react", "react-dom", "showdown"],
+	external: [
+		"react",
+		"react-dom",
+		"react-transition-group",
+		"reactstrap",
+		"showdown",
+	],
 	plugins: [
 		nodeResolve({
 			// the fields to scan in a package.json to determine the entry point
