@@ -1,22 +1,22 @@
-import React, { Component, HTMLAttributes, RefObject } from "react"
-import querystring from "querystring"
-import { int } from "ts3dutils"
-import slugify from "slugify"
-import { Button, Alert, Input, ButtonGroup } from "reactstrap"
-import { Converter } from "showdown"
+import sample from "lodash-es/sample"
 import sum from "lodash-es/sum"
 import unionBy from "lodash-es/unionBy"
-import sample from "lodash-es/sample"
-import TimeAgo from "react-timeago"
+import querystring from "querystring"
+import React, { Component, HTMLAttributes, RefObject } from "react"
 import { StaticContext } from "react-router"
-import { Link, Route, Redirect, RouteComponentProps } from "react-router-dom"
+import { Link, Redirect, Route, RouteComponentProps } from "react-router-dom"
+import TimeAgo from "react-timeago"
+import { Alert, Button, ButtonGroup, Input } from "reactstrap"
 import Container from "reactstrap/lib/Container"
+import { Converter } from "showdown"
+import slugify from "slugify"
+import { int } from "ts3dutils"
 
 import graphsMarkdown from "../content/graphs.md"
 import optalgoMarkdown from "../content/optalgo.md"
 import robMarkdown from "../content/rob.md"
 
-import { Gists, GistDescriptor } from "./gists"
+import { GistDescriptor, Gists } from "./gists"
 
 const cardMarkdowns: { [subject: string]: string } = {
 	graphs: graphsMarkdown,
@@ -81,28 +81,24 @@ interface GitHubFile {
 		html: string // eg "https://github.com/octokit/octokit.rb/blob/master/README.md"
 	}
 }
-function b64EncodeUnicode(str: string) {
+function b64EncodeUnicode(str: string): string {
 	// first we use encodeURIComponent to get percent-encoded UTF-8,
 	// then we convert the percent encodings into raw bytes which
 	// can be fed into btoa.
 	return btoa(
 		encodeURIComponent(str).replace(
 			/%([0-9A-F]{2})/g,
-			function toSolidBytes(match, p1) {
-				return String.fromCharCode(parseInt(p1, 16))
-			},
+			(match, p1): string => String.fromCharCode(parseInt(p1, 16)),
 		),
 	)
 }
 
-function b64DecodeUnicode(str: string) {
+function b64DecodeUnicode(str: string): string {
 	// Going backwards: from bytestream, to percent-encoding, to original string.
 	return decodeURIComponent(
 		atob(str)
 			.split("")
-			.map(function(c) {
-				return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
-			})
+			.map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
 			.join(""),
 	)
 }
