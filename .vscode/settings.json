@@ -20,7 +20,5 @@
 		"compilers": "ts:ts-node/register"
 	},
 	"markdown.extension.orderedList.autoRenumber": false,
-	"editor.rulers": [
-		80
-	  ],
+	"editor.rulers": [80, 120]
 }

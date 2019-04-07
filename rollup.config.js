@@ -5,27 +5,49 @@ import nodeResolve from "rollup-plugin-node-resolve"
 import serve from "rollup-plugin-serve"
 import livereload from "rollup-plugin-livereload"
 import replace from "rollup-plugin-replace"
-import string from "rollup-plugin-string"
+import { string } from "rollup-plugin-string"
 import json from "rollup-plugin-json"
-import glsl from "rollup-plugin-glsl"
+// import glsl from "rollup-plugin-glsl"
 import { terser } from "rollup-plugin-terser"
-import { plugin as analyze } from "rollup-plugin-analyzer"
-import { ufligy, uglify } from "rollup-plugin-uglify"
+// import { plugin as analyze } from "rollup-plugin-analyzer"
+// import { ufligy, uglify } from "rollup-plugin-uglify"
 import * as typescript from "typescript"
 import * as fs from "fs"
 
 const pkg = JSON.parse(fs.readFileSync("package.json"))
+
+function createHtmlExternal() {
+	return { type: "js", file: "http:/unpkg.com/foo/bar" }
+}
+
+let indexHtml = fs.readFileSync("src/index.html", "utf8")
+indexHtml = indexHtml
+	.replace(/https:\/\/unpkg.com\/([^@]+)@\[version]/g, (substr, pkg) => {
+		return substr.replace(
+			"[version]",
+			require(pkg + "/package.json").version,
+		)
+	})
+	.replace(/\[([\w-+_\.]*):([\w-+_\.]*)]/g, (_, dev, prod) =>
+		process.env.BUILD == "production" ? prod : dev,
+	)
+fs.writeFileSync("index.html", indexHtml, "utf8")
+
 export default {
 	input: __dirname + "/src/index.tsx",
 	output: {
 		format: "iife",
-		file: __dirname + (process.env.BUILD == "production" ? "/bundle.min.js" : "/bundle.js"),
+		file:
+			__dirname +
+			(process.env.BUILD == "production"
+				? "/bundle.min.js"
+				: "/bundle.js"),
 		sourcemap: true,
 		name: "spaces",
 		globals: {
 			react: "React",
 			"react-dom": "ReactDOM",
-			"showdown": "showdown",
+			showdown: "showdown",
 		},
 		// globals: moduleName => {
 		// 	const x = require(moduleName + '/package.json').umdGlobal || pkg.umdGlobals && pkg.umdGlobals[moduleName]
@@ -36,23 +58,10 @@ export default {
 	external: ["react", "react-dom", "showdown"],
 	plugins: [
 		nodeResolve({
-			// use "module" field for ES6 module if possible
-			module: true, // Default: true
-
-			// use "jsnext:main" if possible
-			// – see https://github.com/rollup/rollup/wiki/jsnext:main
-			jsnext: true, // Default: false
-
-			// use "main" field or index.js, even if it's not an ES6 module
-			// (needs to be converted from CommonJS to ES6
-			// – see https://github.com/rollup/rollup-plugin-commonjs
-			main: true, // Default: true
-
-			// some package.json files have a `browser` field which
-			// specifies alternative files to load for people bundling
-			// for the browser. If that's you, use this option, otherwise
-			// pkg.browser will be ignored
-			browser: true, // Default: false
+			// the fields to scan in a package.json to determine the entry point
+			// if this list contains "browser", overrides specified in "pkg.browser"
+			// will be used
+			mainFields: ["module", "main", "jsnext", "browser"], // Default: ['module', 'main']
 
 			// not all files you want to resolve are .js files
 			extensions: [".js", ".json"], // Default: ['.js']
@@ -97,6 +106,7 @@ export default {
 			// (see below for more details)
 			namedExports: {
 				react: ["Component"],
+				"react-is": ["isValidElementType"],
 			}, // Default: undefined
 
 			// sometimes you have to leave require statements
@@ -107,22 +117,24 @@ export default {
 		}),
 		json(),
 		string({
-			include: "./**/*.md"
+			include: "./**/*.md",
 		}),
 		replace({
-			"process.env.NODE_ENV": JSON.stringify(process.env.BUILD || "development"),
+			"process.env.NODE_ENV": JSON.stringify(
+				process.env.BUILD || "development",
+			),
 		}),
 		sourcemaps(),
-		glsl({
-			// By default, everything gets included
-			include: "/**/*.glslx",
+		// glsl({
+		// 	// By default, everything gets included
+		// 	include: "/**/*.glslx",
 
-			// Undefined by default
-			// exclude: ['**/index.html'],
+		// 	// Undefined by default
+		// 	// exclude: ['**/index.html'],
 
-			// Source maps are on by default
-			// sourceMap: false
-		}),
+		// 	// Source maps are on by default
+		// 	// sourceMap: false
+		// }),
 		typescriptPlugin({
 			typescript,
 			tsconfig: __dirname + "/tsconfig.json",

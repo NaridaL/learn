@@ -6,6 +6,7 @@ import React, {
 	PureComponent,
 	Props,
 	HTMLAttributes,
+	RefObject,
 } from "react"
 import querystring from "querystring"
 import { int, V3, V, M4, DEG } from "ts3dutils"
@@ -14,6 +15,7 @@ import { CardText, Button, Alert, Input, ButtonGroup } from "reactstrap"
 import { Converter } from "showdown"
 import _ from "lodash-es"
 import { Gists, GistDescriptor } from "./gists"
+import TimeAgo from "react-timeago"
 
 import ReactDOM from "react-dom"
 import {
@@ -29,16 +31,22 @@ import FormGroup from "reactstrap/lib/FormGroup"
 import graphsMarkdown from "../content/graphs.md"
 import optalgoMarkdown from "../content/optalgo.md"
 import robMarkdown from "../content/rob.md"
+import { StaticContext } from "react-router"
 
-const cardMarkdowns = {
+const cardMarkdowns: { [subject: string]: string } = {
 	graphs: graphsMarkdown,
 	optalgo: optalgoMarkdown,
 	rob: robMarkdown,
 }
 
+function ilog<T>(x: T) {
+	console.log(x)
+	return x
+}
+
 const converter = new Converter({ literalMidWordUnderscores: true })
 type CardStates = { [slug: string]: CardState }
-const gs = new Gists(localStorage.getItem("learn_gisthub_token"))
+const gs = new Gists(localStorage.getItem("learn_gisthub_token") || "")
 let saveGist: GistDescriptor
 function getCardState(states: CardStates, slug: string) {
 	return (
@@ -88,7 +96,7 @@ interface GitHubFile {
 		html: string // eg "https://github.com/octokit/octokit.rb/blob/master/README.md"
 	}
 }
-function b64EncodeUnicode(str) {
+function b64EncodeUnicode(str: string) {
 	// first we use encodeURIComponent to get percent-encoded UTF-8,
 	// then we convert the percent encodings into raw bytes which
 	// can be fed into btoa.
@@ -102,7 +110,7 @@ function b64EncodeUnicode(str) {
 	)
 }
 
-function b64DecodeUnicode(str) {
+function b64DecodeUnicode(str: string) {
 	// Going backwards: from bytestream, to percent-encoding, to original string.
 	return decodeURIComponent(
 		atob(str)
@@ -130,15 +138,14 @@ function updateCard(subject: string, card: Card, newText: string) {
 	})
 		.then(r => r.json() as Promise<GitHubFile>)
 		.then(({ sha, content }) => {
-			const newCards = parseCards(b64DecodeUnicode(content)).map(
-				c =>
-					c.slug == card.slug
-						? {
-								title: card.title,
-								slug: card.slug,
-								content: newText,
-						  }
-						: c,
+			const newCards = parseCards(b64DecodeUnicode(content)).map(c =>
+				c.slug == card.slug
+					? {
+							title: card.title,
+							slug: card.slug,
+							content: newText,
+					  }
+					: c,
 			)
 			const newContentContent = newCards
 				.map(
@@ -169,6 +176,7 @@ function getCardsFromGitHub(subject: string) {
 		cache: "no-store",
 	})
 		.then(r => r.text())
+		.then(ilog)
 		.then(content => parseCards(content))
 }
 
@@ -187,7 +195,7 @@ function parseCards(contentMarkdown: string): Card[] {
 		.map(x => x.trim())
 		.filter(x => x !== "")
 	return cardTexts.map(text => {
-		const [, title, slug, content] = text.match(cardRegex)
+		const [, title, slug, content] = text.match(cardRegex)!
 		return new Card(
 			title.trim(),
 			slug ? slug.trim() : slugify(title),
@@ -213,12 +221,13 @@ function reviveJSONSave(json: {
 	[x: string]: { incorrect: string[]; correct: string[] }
 }) {
 	console.log(json)
-	const result = {}
+	const result: CardStates = {}
 	Object.keys(json).forEach(slug => {
 		const { correct, incorrect } = json[slug]
 		result[slug] = {
 			correct: correct.map(x => new Date(x)),
 			incorrect: incorrect.map(x => new Date(x)),
+			level: 0,
 		}
 		fixLevel(result[slug])
 	})
@@ -258,7 +267,7 @@ export function SubjectOverview(props: RouteComponentProps) {
 	return (
 		<ul>
 			{Object.keys(cardMarkdowns).map(subject => (
-				<li>
+				<li key={subject}>
 					<Link to={"/" + subject}>{subject}</Link>
 				</li>
 			))}
@@ -267,35 +276,41 @@ export function SubjectOverview(props: RouteComponentProps) {
 }
 export function App() {
 	return (
-		<Container style={{ height: "100%" }}>
-			<Route exact path="/" component={SubjectOverview} />
-			<Route path="/:subject" component={Subject} />
-		</Container>
+		<React.StrictMode>
+			<Container style={{ height: "100%" }}>
+				<Route exact path="/" component={SubjectOverview} />
+				<Route
+					path="/:subject"
+					render={({ match }) => (
+						<Subject
+							subject={match.params.subject}
+							key={match.params.subject}
+						/>
+					)}
+				/>
+			</Container>
+		</React.StrictMode>
 	)
 }
 
-export class Subject extends Component<
-	RouteComponentProps<{ subject: string }>,
-	SubjectState
-> {
+export class Subject extends Component<{ subject: string }, SubjectState> {
 	public state = new SubjectState()
 
-	constructor(props: RouteComponentProps<{ subject: string }>) {
+	constructor(props: { subject: string }) {
 		super(props)
-		this.updateCards()
+		const { subject } = this.props
+		this.state.cards = parseCards(cardMarkdowns[subject])
+		const localSave = localStorage.getItem("save_" + subject)
+		this.state.cardStates = localSave
+			? reviveJSONSave(JSON.parse(localSave))
+			: {}
 	}
 
-	updateCards() {
-		const subject = this.props.match.params.subject
-		this.setState({
-			cards: parseCards(cardMarkdowns[subject]),
-			cardStates: localStorage.getItem("save_graphs")
-				? reviveJSONSave(
-						JSON.parse(localStorage.getItem("save_graphs")),
-				  )
-				: {},
-		})
+	componentDidMount() {
+		const { subject } = this.props
+
 		getCardsFromGitHub(subject).then(cards => this.setState({ cards }))
+
 		if (localStorage.getItem("learn_gisthub_token")) {
 			saveGistPromise
 				.then(gist => {
@@ -315,16 +330,86 @@ export class Subject extends Component<
 				})
 				.catch(console.error)
 		}
+
+		// MathJax is loaded async, and may not be available at this point
+		;(window as any).MathJax && MathJax.Hub.Queue(["Typeset", MathJax.Hub])
 	}
-	componentDidUpdate(prevProps) {
-		// Typical usage (don't forget to compare props):
-		if (
-			this.props.match.params.subject !== prevProps.match.params.subject
-		) {
-			this.updateCards()
+
+	componentDidUpdate() {
+		MathJax.Hub.Queue(["Typeset", MathJax.Hub])
+	}
+
+	CardCardRender = ({
+		match,
+	}: RouteComponentProps<any, StaticContext, any>) => {
+		const { cardslug, subject } = match.params
+		return (
+			<>
+				<BackToOverview subject={subject} />
+				<CardCard
+					subject={subject}
+					card={this.state.cards.find(c => c.slug == cardslug)!}
+				/>
+			</>
+		)
+	}
+
+	CardQuestionRender = ({
+		match,
+	}: RouteComponentProps<any, StaticContext, any>) => {
+		const { subject, level } = match.params
+		const levelCards = this.state.cards.filter(
+			c => getCardState(this.state.cardStates, c.slug).level === +level,
+		)
+		if (0 == levelCards.length) {
+			this.state.info = "No more cards in level " + match.params.level
+			return <Redirect to={"/" + subject} />
 		}
-		console.log("Running mathjax")
-		MathJax.Hub.Queue(["Typeset", MathJax.Hub, ReactDOM.findDOMNode(this)])
+		const testCard = _.sample(levelCards)!
+		return (
+			<CardQuestion
+				card={testCard}
+				subject={subject}
+				onContinue={() =>
+					this.setState({
+						redirect:
+							"/" +
+							subject +
+							"/learn/" +
+							match.params.level +
+							"/answer/" +
+							testCard.slug,
+					})
+				}
+			/>
+		)
+	}
+
+	EditCardRender = ({
+		match,
+	}: RouteComponentProps<any, StaticContext, any>) => {
+		const { cardslug, subject } = match.params
+		return (
+			<EditCard
+				cards={this.state.cards}
+				subject={subject}
+				cardslug={cardslug}
+				key={subject + "#" + cardslug}
+			/>
+		)
+	}
+
+	NewCardRender = ({
+		match,
+	}: RouteComponentProps<any, StaticContext, any>) => {
+		const { cardslug, subject } = match.params
+		return (
+			<EditCard
+				cards={this.state.cards}
+				subject={subject}
+				key={subject + "#new"}
+			/>
+		)
 	}
 
 	public render() {
@@ -333,62 +418,18 @@ export class Subject extends Component<
 			this.state.redirect = undefined
 			return result
 		}
-		const subject = this.props.match.params.subject
+		const { subject } = this.props
 		const { cards } = this.state
 		return (
-			<>
+			<div>
 				<Route
 					path="/:subject/card/:cardslug"
-					render={match => [
-						<BackToOverview subject={subject} />,
-						<CardCard
-							subject={subject}
-							card={cards.find(
-								c => c.slug == match.match.params.cardslug,
-							)}
-						/>,
-					]}
+					component={this.CardCardRender}
 				/>
 				<Route
 					exact
 					path="/:subject/learn/:level"
-					render={({ match }) => {
-						console.log(
-							cards.filter(
-								c =>
-									getCardState(this.state.cardStates, c.slug)
-										.level === +match.params.level,
-							),
-						)
-						const levelCards = cards.filter(
-							c =>
-								getCardState(this.state.cardStates, c.slug)
-									.level === +match.params.level,
-						)
-						if (0 == levelCards.length) {
-							this.state.info =
-								"No more cards in level " + match.params.level
-							return <Redirect to={"/" + subject} />
-						}
-						const testCard = _.sample(levelCards)
-						return (
-							<CardQuestion
-								card={testCard}
-								subject={subject}
-								onContinue={() =>
-									this.setState({
-										redirect:
-											"/" +
-											subject +
-											"/learn/" +
-											match.params.level +
-											"/answer/" +
-											testCard.slug,
-									})
-								}
-							/>
-						)
-					}}
+					component={this.CardQuestionRender}
 				/>
 				<Route
 					exact
@@ -396,7 +437,7 @@ export class Subject extends Component<
 					render={({ match }) => {
 						const card = cards.find(
 							c => c.slug == match.params.cardslug,
-						)
+						)!
 						return (
 							<CardAnswer
 								card={card}
@@ -428,16 +469,20 @@ export class Subject extends Component<
 				<Route
 					exact
 					path="/:subject/edit/:cardslug"
-					component={EditCard}
+					component={this.EditCardRender}
 				/>
-				<Route path="*" render={match => JSON.stringify(match)} />
-			</>
+				<Route
+					exact
+					path="/:subject/new"
+					component={this.NewCardRender}
+				/>
+				{/* <Route path="*" render={match => JSON.stringify(match)} /> */}
+			</div>
 		)
 	}
 
 	answer = (correct: boolean, card: Card, match: any) => {
-		console.log("answering")
-		const subject = this.props.match.params.subject
+		const { subject } = this.props
 		const currentCardState = getCardState(this.state.cardStates, card.slug)
 		const newLevel = correct ? currentCardState.level + 1 : 1
 		const newCorrect = correct
@@ -460,7 +505,7 @@ export class Subject extends Component<
 			redirect: "/" + subject + "/learn/" + match.params.level,
 		})
 	}
-	saverController: AbortController
+	saverController: AbortController = new AbortController()
 	saveLevels = (newLevels: CardStates): void => {
 		// this.saverController && this.saverController.abort()
 		this.saverController = new AbortController()
@@ -500,7 +545,6 @@ export function CardCard(
 	if (!card) {
 		return <div>card undefined</div>
 	}
-	console.log("rederning cardcard")
 	return (
 		<div {...htmlAttributes} style={{ ...style, padding: "4px" }}>
 			<h3 style={{ textAlign: "center" }}>{card.title}</h3>
@@ -555,43 +599,26 @@ export function CardAnswer({
 
 class EditCardState {
 	saving = false
+	lastSaved: Date | undefined = undefined
 	constructor(public currentContent: string) {}
 }
-type EditCardProps = RouteComponentProps<{
-	cardslug: string
+type EditCardProps = {
+	cardslug?: string
 	subject: string
-}> & {
 	cards: Card[]
 }
 export class EditCard extends Component<EditCardProps, EditCardState> {
-	textarea: HTMLTextAreaElement
+	textarea = React.createRef<HTMLTextAreaElement>()
 	constructor(props: EditCardProps) {
 		super(props)
 		this.state = new EditCardState(this.getCard().content)
 	}
 	getCard() {
-		return this.props.cards.find(
-			c => c.slug == this.props.match.params.cardslug,
-		)
-	}
-	getDerivedStateFromProps(
-		nextProps: RouteComponentProps<{ cardslug: string }>,
-	) {
-		console.log("getDerivedStateFromProps", this.props, nextProps)
-		if (
-			nextProps.match.params.cardslug !== this.props.match.params.cardslug
-		) {
-			console.log("here")
-			return { currentContent: this.getCard().content }
-		}
+		return this.props.cards.find(c => c.slug == this.props.cardslug)!
 	}
 	render() {
-		console.log(
-			this.getCard().content != this.state.currentContent,
-			this.getCard().content,
-			this.state.currentContent,
-		)
-		const subject = this.props.match.params.subject
+		const subject = this.props.subject
+		const card = this.getCard()
 		return (
 			<div
 				style={{
@@ -601,16 +628,23 @@ export class EditCard extends Component<EditCardProps, EditCardState> {
 				}}
 			>
 				<BackToOverview subject={subject} />
+				<Link to={"/" + subject + "/card/" + card.slug}>
+					Back to Card
+				</Link>
 				<h1
 					style={{
 						margin: "auto 8px",
 						textAlign: "center",
 					}}
 				>
-					{this.getCard().title}
+					{card.title}
 				</h1>
 				<Input
-					style={{ flexGrow: 1, minHeight: "400px" }}
+					style={{
+						flexGrow: 1,
+						minHeight: "400px",
+						fontFamily: "monospace",
+					}}
 					type="textarea"
 					name="text"
 					id="exampleText"
@@ -618,7 +652,9 @@ export class EditCard extends Component<EditCardProps, EditCardState> {
 					onChange={e =>
 						this.setState({ currentContent: e.target.value })
 					}
-					innerRef={r => (this.textarea = r as any)}
+					innerRef={
+						(this.textarea as any) as RefObject<HTMLInputElement>
+					}
 				/>
 				<ButtonGroup style={{ display: "flex" }}>
 					<Button
@@ -657,48 +693,60 @@ export class EditCard extends Component<EditCardProps, EditCardState> {
 				>
 					{this.state.saving
 						? "Saving..."
-						: this.getCard().content != this.state.currentContent
-							? "Save"
-							: "Saved"}
+						: card.content != this.state.currentContent
+						? "Save"
+						: "Saved"}{" "}
+					{this.state.lastSaved && (
+						<span>
+							(last saved{" "}
+							<TimeAgo
+								date={this.state.lastSaved}
+								minPeriod={10}
+							/>
+							)
+						</span>
+					)}
 				</Button>
 			</div>
 		)
 	}
 	wrap = (char: string) => {
-		this.textarea.selectionStart
-		let v = this.textarea.value
-		v = strSplice(v, this.textarea.selectionEnd, char)
-		v = strSplice(v, this.textarea.selectionStart, char)
-		const start = this.textarea.selectionStart + char.length
-		const end = this.textarea.selectionEnd + char.length
-		this.textarea.value = v
-		this.textarea.dispatchEvent(new Event("input", { bubbles: true }))
-		this.textarea.selectionStart = start
-		this.textarea.selectionEnd = end
-		this.textarea.focus()
+		const textarea = this.textarea.current!
+		textarea.selectionStart
+		let v = textarea.value
+		v = strSplice(v, textarea.selectionEnd, char)
+		v = strSplice(v, textarea.selectionStart, char)
+		const start = textarea.selectionStart + char.length
+		const end = textarea.selectionEnd + char.length
+		textarea.value = v
+		textarea.dispatchEvent(new Event("input", { bubbles: true }))
+		textarea.selectionStart = start
+		textarea.selectionEnd = end
+		textarea.focus()
 	}
 	insert = (char: string) => {
-		const start = this.textarea.selectionStart + char.length
+		const textarea = this.textarea.current!
+		const start = textarea.selectionStart + char.length
 		const end = start
-		this.textarea.value = strSplice(
-			this.textarea.value,
-			this.textarea.selectionStart,
+		textarea.value = strSplice(
+			textarea.value,
+			textarea.selectionStart,
 			char,
-			this.textarea.selectionEnd - this.textarea.selectionStart,
+			textarea.selectionEnd - textarea.selectionStart,
 		)
-		this.textarea.dispatchEvent(new Event("input", { bubbles: true }))
-		this.textarea.selectionStart = start
-		this.textarea.selectionEnd = end
-		this.textarea.focus()
+		textarea.dispatchEvent(new Event("input", { bubbles: true }))
+		textarea.selectionStart = start
+		textarea.selectionEnd = end
+		textarea.focus()
 	}
 	save = async () => {
 		this.setState({ saving: true })
 		await updateCard(
-			this.props.match.params.subject,
+			this.props.subject,
 			this.getCard(),
 			this.state.currentContent,
 		)
-		this.setState({ saving: false })
+		this.setState({ saving: false, lastSaved: new Date() })
 	}
 }
 
@@ -734,7 +782,7 @@ export function CardQuestion({
 }
 
 export function BackToOverview({ subject }: { subject: string }) {
-	return <Link to={"/" + subject}>Zurück zur Übersicht</Link>
+	return <Link to={"/" + subject}>Back to Overview</Link>
 }
 
 export function CardOverview({
@@ -750,6 +798,10 @@ export function CardOverview({
 	error?: string
 	cardStates: CardStates
 }) {
+	const totalProgressStr =
+		_.sum(cards.map(c => getCardState(cardStates, c.slug).level - 1)) +
+		"/" +
+		cards.length * 4
 	return (
 		<>
 			{info && <Alert color="info">{info}</Alert>}
@@ -799,15 +851,7 @@ export function CardOverview({
 					</ul>
 				</React.Fragment>
 			))}
-			<div>
-				Total Progress:{" "}
-				{cards.reduce(
-					(acc, card) =>
-						acc + getCardState(cardStates, card.slug).level - 1,
-					0,
-				)}
-				/{cards.length * 4}
-			</div>
+			<div>Total Progress: {totalProgressStr}</div>
 			<Input
 				placeholder="github API token w/ gist"
 				onChange={e =>
