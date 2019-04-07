@@ -1,37 +1,22 @@
-import React, {
-	Component,
-	ReactNode,
-	MouseEvent,
-	TouchEvent,
-	PureComponent,
-	Props,
-	HTMLAttributes,
-	RefObject,
-} from "react"
+import React, { Component, HTMLAttributes, RefObject } from "react"
 import querystring from "querystring"
-import { int, V3, V, M4, DEG } from "ts3dutils"
+import { int } from "ts3dutils"
 import slugify from "slugify"
-import { CardText, Button, Alert, Input, ButtonGroup } from "reactstrap"
+import { Button, Alert, Input, ButtonGroup } from "reactstrap"
 import { Converter } from "showdown"
-import _ from "lodash-es"
-import { Gists, GistDescriptor } from "./gists"
+import sum from "lodash-es/sum"
+import unionBy from "lodash-es/unionBy"
+import sample from "lodash-es/sample"
 import TimeAgo from "react-timeago"
-
-import ReactDOM from "react-dom"
-import {
-	Link,
-	Switch,
-	Route,
-	Redirect,
-	RouteComponentProps,
-} from "react-router-dom"
+import { StaticContext } from "react-router"
+import { Link, Route, Redirect, RouteComponentProps } from "react-router-dom"
 import Container from "reactstrap/lib/Container"
-import FormGroup from "reactstrap/lib/FormGroup"
 
 import graphsMarkdown from "../content/graphs.md"
 import optalgoMarkdown from "../content/optalgo.md"
 import robMarkdown from "../content/rob.md"
-import { StaticContext } from "react-router"
+
+import { Gists, GistDescriptor } from "./gists"
 
 const cardMarkdowns: { [subject: string]: string } = {
 	graphs: graphsMarkdown,
@@ -169,7 +154,7 @@ function updateCard(subject: string, card: Card, newText: string) {
 				}),
 			])
 		})
-		.then(([newCards, r]) => newCards)
+		.then(([newCards]) => newCards)
 }
 function getCardsFromGitHub(subject: string) {
 	return fetch("content/" + subject + ".md", {
@@ -246,12 +231,12 @@ function fixLevel(x: CardState) {
 }
 function mergeSaves(a: CardStates, b: CardStates) {
 	function merge(c: CardState, d: CardState) {
-		c.correct = _.unionBy(c.correct, d.correct, x => x.getTime()).sort(
+		c.correct = unionBy(c.correct, d.correct, x => x.getTime()).sort(
 			(a, b) => a.valueOf() - b.valueOf(),
 		)
-		c.incorrect = _.unionBy(c.incorrect, d.incorrect, x =>
-			x.getTime(),
-		).sort((a, b) => a.valueOf() - b.valueOf())
+		c.incorrect = unionBy(c.incorrect, d.incorrect, x => x.getTime()).sort(
+			(a, b) => a.valueOf() - b.valueOf(),
+		)
 		fixLevel(c)
 	}
 	Object.keys(b).forEach(slug => {
@@ -263,7 +248,7 @@ function mergeSaves(a: CardStates, b: CardStates) {
 	})
 }
 
-export function SubjectOverview(props: RouteComponentProps) {
+export function SubjectOverview() {
 	return (
 		<ul>
 			{Object.keys(cardMarkdowns).map(subject => (
@@ -365,7 +350,7 @@ export class Subject extends Component<{ subject: string }, SubjectState> {
 			this.state.info = "No more cards in level " + match.params.level
 			return <Redirect to={"/" + subject} />
 		}
-		const testCard = _.sample(levelCards)!
+		const testCard = sample(levelCards)!
 		return (
 			<CardQuestion
 				card={testCard}
@@ -402,7 +387,7 @@ export class Subject extends Component<{ subject: string }, SubjectState> {
 	NewCardRender = ({
 		match,
 	}: RouteComponentProps<any, StaticContext, any>) => {
-		const { cardslug, subject } = match.params
+		const { subject } = match.params
 		return (
 			<EditCard
 				cards={this.state.cards}
@@ -452,7 +437,7 @@ export class Subject extends Component<{ subject: string }, SubjectState> {
 				<Route
 					exact
 					path="/:subject/"
-					render={match => {
+					render={() => {
 						const result = (
 							<CardOverview
 								cards={cards}
@@ -799,7 +784,7 @@ export function CardOverview({
 	cardStates: CardStates
 }) {
 	const totalProgressStr =
-		_.sum(cards.map(c => getCardState(cardStates, c.slug).level - 1)) +
+		sum(cards.map(c => getCardState(cardStates, c.slug).level - 1)) +
 		"/" +
 		cards.length * 4
 	return (
