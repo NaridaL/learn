@@ -13,6 +13,7 @@ import { terser } from "rollup-plugin-terser"
 // import { ufligy, uglify } from "rollup-plugin-uglify"
 import * as typescript from "typescript"
 import * as fs from "fs"
+import * as crypto from "crypto"
 
 const pkg = JSON.parse(fs.readFileSync("package.json"))
 
@@ -22,16 +23,36 @@ function createHtmlExternal() {
 
 let indexHtml = fs.readFileSync("src/index.html", "utf8")
 indexHtml = indexHtml
+	.replace(/\[([\w-+_\.]*):([\w-+_\.]*)]/g, (_, dev, prod) =>
+		process.env.BUILD == "production" ? prod : dev,
+	)
+	.replace(
+		/src=["']https:\/\/unpkg.com\/([^@]+)@\[version]([^"']+)(["'])/g,
+		(srcAttribute, moduleName, path, quote) =>
+			srcAttribute +
+			"\n\t\t\tintegrity=" +
+			quote +
+			calcSha512Hash("node_modules/" + moduleName + path) +
+			quote,
+	)
 	.replace(/https:\/\/unpkg.com\/([^@]+)@\[version]/g, (substr, pkg) => {
 		return substr.replace(
 			"[version]",
 			require(pkg + "/package.json").version,
 		)
 	})
-	.replace(/\[([\w-+_\.]*):([\w-+_\.]*)]/g, (_, dev, prod) =>
-		process.env.BUILD == "production" ? prod : dev,
-	)
+// console.log(indexHtml)
 fs.writeFileSync("index.html", indexHtml, "utf8")
+
+function calcSha512Hash(file) {
+	return (
+		"sha512-" +
+		crypto
+			.createHash("sha512")
+			.update(fs.readFileSync(file))
+			.digest("base64")
+	)
+}
 
 export default {
 	input: __dirname + "/src/index.tsx",
